@@ -235,3 +235,31 @@ html.dark img { opacity: 0.9; }
   .grid-2, .grid-3, .grid-6 { grid-template-columns: 1fr; }
   .sheet { margin: 8px; border-radius: 12px; }
 }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.tab {
+  padding: 10px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 0;
+}
+.tab:hover { color: var(--text); background: var(--raised); }
+.tab-active {
+  color: var(--text);
+  border-bottom: 2px solid var(--accent);
+  background: var(--raised);
+}
+@media (max-width: 640px) {
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tab { white-space: nowrap; flex-shrink: 0; }
+}
