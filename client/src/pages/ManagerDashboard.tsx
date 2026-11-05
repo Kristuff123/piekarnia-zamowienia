@@ -1,9 +1,11 @@
 import { useAuth } from "../lib/auth";
+import { useT } from "../lib/i18n";
 import { SHOPS, PRODUCTS, SALES, ORDERS } from "../lib/data";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts";
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
+  const { t } = useT();
   const shops = SHOPS.filter((s) => user?.shops.includes(s.id));
 
   const byShop = shops.map((s) => {
@@ -33,36 +35,36 @@ export default function ManagerDashboard() {
   return (
     <div className="stack">
       <div>
-        <h1 className="title">Panel managera</h1>
-        <p className="muted">Zbiorczy widok {shops.length} przypisanych sklepów</p>
+        <h1 className="title">{t("manager.title")}</h1>
+        <p className="muted">{t("manager.subtitle", { count: shops.length })}</p>
       </div>
 
       <div className="grid-3" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
         <div className="card">
-          <div className="kpi-label">Przychód łączny</div>
+          <div className="kpi-label">{t("manager.kpi_total_revenue")}</div>
           <div className="kpi" style={{ marginTop: 6 }}>{totalRev.toFixed(0)} zł</div>
           <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>+12% vs poprzedni tydzień</div>
         </div>
         <div className="card">
-          <div className="kpi-label">Sprzedane sztuki</div>
+          <div className="kpi-label">{t("manager.kpi_units_sold")}</div>
           <div className="kpi" style={{ marginTop: 6 }}>{totalQty}</div>
           <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{byShop.length} sklepów</div>
         </div>
         <div className="card">
-          <div className="kpi-label">Zamówienia</div>
+          <div className="kpi-label">{t("manager.kpi_orders")}</div>
           <div className="kpi" style={{ marginTop: 6 }}>{totalOrders}</div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>w tym tygodniu</div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("manager.kpi_this_week")}</div>
         </div>
         <div className="card">
-          <div className="kpi-label">Najlepszy sklep</div>
+          <div className="kpi-label">{t("manager.kpi_best_shop")}</div>
           <div style={{ marginTop: 6, fontSize: 16, fontWeight: 600 }}>{byShop.slice().sort((a, b) => b.przychód - a.przychód)[0]?.name ?? "—"}</div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>wg przychodu</div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("manager.kpi_by_revenue")}</div>
         </div>
       </div>
 
       <div className="grid-2">
         <div className="card">
-          <h2 className="section">Przychód wg sklepu</h2>
+          <h2 className="section">{t("manager.section_revenue_by_shop")}</h2>
           <div style={{ height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={byShop}>
@@ -78,7 +80,7 @@ export default function ManagerDashboard() {
           </div>
         </div>
         <div className="card">
-          <h2 className="section">Najlepiej sprzedające się pozycje</h2>
+          <h2 className="section">{t("manager.section_top_products")}</h2>
           <div style={{ height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={byProduct} layout="vertical">
@@ -94,10 +96,10 @@ export default function ManagerDashboard() {
       </div>
 
       <div className="card">
-        <h2 className="section">Analiza ABC (wg przychodu)</h2>
+        <h2 className="section">{t("manager.section_abc")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>Klasa</th><th>Produkty</th><th className="num">Przychód</th><th className="num">Udział</th></tr></thead>
+            <thead><tr><th>{t("manager.abc_class")}</th><th>{t("manager.abc_products")}</th><th className="num">{t("manager.abc_revenue")}</th><th className="num">{t("manager.abc_share")}</th></tr></thead>
             <tbody>
               {(() => {
                 const sorted = byProduct.map((p) => ({ ...p, rev: p.ilość * (PRODUCTS.find((x) => x.name === p.name)?.price ?? 1) })).sort((a, b) => b.rev - a.rev);
@@ -123,11 +125,11 @@ export default function ManagerDashboard() {
             </tbody>
           </table>
         </div>
-        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>A = 80% przychodu, B = kolejne 15%, C = reszta.</p>
+        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>{t("manager.abc_hint")}</p>
       </div>
 
       <div className="card">
-        <h2 className="section">Porównanie okresów (obecny vs poprzedni tydzień)</h2>
+        <h2 className="section">{t("manager.section_period_compare")}</h2>
         <div style={{ height: 220 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={trendData}>
@@ -144,11 +146,11 @@ export default function ManagerDashboard() {
       </div>
 
       <div className="card">
-        <h2 className="section">Porównanie sklepów</h2>
+        <h2 className="section">{t("manager.section_shop_compare")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
             <thead>
-              <tr><th>Sklep</th><th>Miasto</th><th className="num">Przychód</th><th className="num">Sztuki</th><th className="num">Zamówienia</th><th className="num">Pozycji</th></tr>
+              <tr><th>{t("manager.compare_shop")}</th><th>{t("manager.compare_city")}</th><th className="num">{t("manager.compare_revenue")}</th><th className="num">{t("manager.compare_units")}</th><th className="num">{t("manager.compare_orders")}</th><th className="num">{t("manager.compare_items")}</th></tr>
             </thead>
             <tbody>
               {byShop.map((s) => {

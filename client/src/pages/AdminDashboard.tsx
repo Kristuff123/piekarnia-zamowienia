@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useT } from "../lib/i18n";
 import { SHOPS, PRODUCTS, MIN_QTY, SALES, STOCK, AUDIT_LOG as MOCK_AUDIT } from "../lib/data";
 import { USERS } from "../lib/auth";
 import { apiFetch } from "../lib/api";
 import type { AuditEntry, StockItem } from "../lib/data";
 
 export default function AdminDashboard() {
+  const { t } = useT();
   const [mins, setMins] = useState(MIN_QTY);
   const [stock, setStock] = useState<StockItem[]>(STOCK);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>(MOCK_AUDIT);
@@ -116,39 +118,39 @@ export default function AdminDashboard() {
   return (
     <div className="stack">
       <div>
-        <h1 className="title">Administracja</h1>
-        <p className="muted">Wszystkie sklepy, użytkownicy i konfiguracja asortymentu stałego</p>
+        <h1 className="title">{t("admin.title")}</h1>
+        <p className="muted">{t("admin.subtitle")}</p>
       </div>
 
       <div className="grid-3" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
         <div className="card">
-          <div className="kpi-label">Sklepy</div>
+          <div className="kpi-label">{t("admin.kpi_shops")}</div>
           <div className="kpi" style={{ marginTop: 6 }}>{SHOPS.length}</div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>aktywne</div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("admin.kpi_active")}</div>
         </div>
         <div className="card">
-          <div className="kpi-label">Pozycje asortymentu</div>
+          <div className="kpi-label">{t("admin.kpi_products")}</div>
           <div className="kpi" style={{ marginTop: 6 }}>{PRODUCTS.length}</div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{new Set(PRODUCTS.map((p) => p.category)).size} kategorii</div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{new Set(PRODUCTS.map((p) => p.category)).size} {t("admin.kpi_categories")}</div>
         </div>
         <div className="card">
-          <div className="kpi-label">Przychód łączny</div>
+          <div className="kpi-label">{t("admin.kpi_total_revenue")}</div>
           <div className="kpi" style={{ marginTop: 6 }}>{totalRev.toFixed(0)} zł</div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{totalQty} szt sprzedanych</div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{totalQty} {t("admin.kpi_units_sold")}</div>
         </div>
         <div className="card">
-          <div className="kpi-label">Alerty stanów</div>
+          <div className="kpi-label">{t("admin.kpi_stock_alerts")}</div>
           <div className="kpi" style={{ marginTop: 6, color: lowStock.length ? "var(--negative)" : "var(--text)" }}>{lowStock.length}</div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>pozycji poniżej min</div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("admin.kpi_below_min")}</div>
         </div>
       </div>
 
       <div className="grid-2">
         <div className="card">
-          <h2 className="section">Sklepy</h2>
+          <h2 className="section">{t("admin.section_shops")}</h2>
           <div style={{ overflowX: "auto" }}>
             <table className="table">
-              <thead><tr><th>Nazwa</th><th>Miasto</th><th>Region</th><th className="num">Przychód</th></tr></thead>
+              <thead><tr><th>{t("admin.col_shop")}</th><th>{t("admin.col_city")}</th><th>{t("admin.col_region")}</th><th className="num">{t("admin.col_revenue" )}</th></tr></thead>
               <tbody>
                 {SHOPS.map((s) => {
                   const rev = SALES.filter((x) => x.shop === s.id).reduce((a, b) => a + b.revenue, 0);
@@ -166,13 +168,13 @@ export default function AdminDashboard() {
           </div>
         </div>
         <div className="card">
-          <h2 className="section">Stany magazynowe (poniżej min)</h2>
+          <h2 className="section">{t("admin.section_stock_alerts")}</h2>
           {lowStock.length === 0 ? (
-            <p className="muted" style={{ fontSize: 13 }}>Brak alertów</p>
+            <p className="muted" style={{ fontSize: 13 }}>{t("admin.no_stock_alerts")}</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table className="table">
-                <thead><tr><th>Produkt</th><th className="num">Stan</th><th className="num">Min</th><th>Lokalizacja</th></tr></thead>
+                <thead><tr><th>{t("admin.col_product")}</th><th className="num">{t("admin.col_stock")}</th><th className="num">{t("admin.col_min")}</th><th>{t("admin.col_location")}</th></tr></thead>
                 <tbody>
                   {lowStock.map((s) => {
                     const p = PRODUCTS.find((x) => x.id === s.product);
@@ -193,10 +195,10 @@ export default function AdminDashboard() {
       </div>
 
       <div className="card">
-        <h2 className="section">Użytkownicy i uprawnienia</h2>
+        <h2 className="section">{t("admin.section_users")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>Login</th><th>Nazwa</th><th>Rola</th><th>Sklepy</th><th>Uprawnienia</th><th>2FA</th></tr></thead>
+            <thead><tr><th>{t("admin.col_login")}</th><th>{t("admin.col_name")}</th><th>{t("admin.col_role")}</th><th>{t("admin.col_shops")}</th><th>{t("admin.col_permissions")}</th><th>{t("admin.col_2fa")}</th></tr></thead>
             <tbody>
               {USERS.map((u) => (
                 <tr key={u.id}>
@@ -205,7 +207,7 @@ export default function AdminDashboard() {
                   <td><span className="pill pill-neutral">{u.role}</span></td>
                   <td style={{ fontSize: 12 }}>{u.shops.join(", ")}</td>
                   <td style={{ fontSize: 12 }}>{u.permissions.join(", ")}</td>
-                  <td>{u.twoFactor ? <span className="pill pill-positive">włączone</span> : <span className="pill pill-warning">wyłączone</span>}</td>
+                  <td>{u.twoFactor ? <span className="pill pill-positive">{t("admin.enabled")}</span> : <span className="pill pill-warning">{t("admin.disabled")}</span>}</td>
                 </tr>
               ))}
             </tbody>
@@ -214,10 +216,10 @@ export default function AdminDashboard() {
       </div>
 
       <div className="card">
-        <h2 className="section">Dziennik audytu</h2>
+        <h2 className="section">{t("admin.section_audit")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>Data</th><th>Użytkownik</th><th>Akcja</th><th>Cel</th></tr></thead>
+            <thead><tr><th>{t("admin.col_date")}</th><th>{t("admin.col_user")}</th><th>{t("admin.col_action")}</th><th>{t("admin.col_target")}</th></tr></thead>
             <tbody>
               {auditLog.map((a) => (
                 <tr key={a.id}>
@@ -233,86 +235,86 @@ export default function AdminDashboard() {
       </div>
 
       <div className="card">
-        <h2 className="section">Korekta stanu magazynowego (inwentaryzacja)</h2>
+        <h2 className="section">{t("admin.section_inventory")}</h2>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
           <select className="input" style={{ width: 260 }} value={adjProduct} onChange={(e) => setAdjProduct(e.target.value)}>
             {PRODUCTS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <input className="input" type="number" placeholder="Delta (+/-)" value={adjDelta} onChange={(e) => setAdjDelta(Number(e.target.value))} style={{ width: 120 }} />
           <input className="input" placeholder="Powód korekty" value={adjReason} onChange={(e) => setAdjReason(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
-          <button className="btn btn-primary" onClick={adjustStock}>Zastosuj</button>
+          <button className="btn btn-primary" onClick={adjustStock}>{t("admin.btn_apply")}</button>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="section">Webhooki (z podpisem HMAC)</h2>
+        <h2 className="section">{t("admin.section_webhooks")}</h2>
         <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
           <input className="input" placeholder="https://example.com/hook" value={whUrl} onChange={(e) => setWhUrl(e.target.value)} style={{ flex: 1, minWidth: 240 }} />
           <input className="input" placeholder="zdarzenia (przecinek)" value={whEvents} onChange={(e) => setWhEvents(e.target.value)} style={{ width: 220 }} />
-          <button className="btn btn-primary" onClick={createWebhook}>Dodaj</button>
+          <button className="btn btn-primary" onClick={createWebhook}>{t("admin.btn_add")}</button>
         </div>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>URL</th><th>Zdarzenia</th><th>Aktywny</th><th></th></tr></thead>
+            <thead><tr><th>{t("admin.col_url")}</th><th>{t("admin.col_events")}</th><th>{t("admin.col_active")}</th><th></th></tr></thead>
             <tbody>
               {webhooks.map((w) => (
                 <tr key={w.id}>
                   <td style={{ fontSize: 12 }} className="mono">{w.url}</td>
                   <td style={{ fontSize: 12 }}>{(w.events || []).join(", ")}</td>
-                  <td>{w.active ? <span className="pill pill-positive">tak</span> : <span className="pill pill-neutral">nie</span>}</td>
+                  <td>{w.active ? <span className="pill pill-positive">{t("admin.active")}</span> : <span className="pill pill-neutral">{t("admin.inactive")}</span>}</td>
                   <td style={{ display: "flex", gap: 4 }}>
-                    <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => testWebhook(w.id)}>Test</button>
-                    <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => deleteWebhook(w.id)}>Usuń</button>
+                    <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => testWebhook(w.id)}>{t("admin.btn_test")}</button>
+                    <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => deleteWebhook(w.id)}>{t("admin.btn_delete")}</button>
                   </td>
                 </tr>
               ))}
-              {webhooks.length === 0 && <tr><td colSpan={4} className="muted">Brak webhooków</td></tr>}
+              {webhooks.length === 0 && <tr><td colSpan={4} className="muted">{t("admin.no_webhooks")}</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="section">Klucze API (maszynowe)</h2>
+        <h2 className="section">{t("admin.section_api_keys")}</h2>
         <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
           <input className="input" placeholder="Nazwa klucza" value={keyName} onChange={(e) => setKeyName(e.target.value)} style={{ width: 200 }} />
           <input className="input" placeholder="zakresy (przecinek)" value={keyScopes} onChange={(e) => setKeyScopes(e.target.value)} style={{ width: 200 }} />
-          <button className="btn btn-primary" onClick={createApiKey}>Utwórz</button>
+          <button className="btn btn-primary" onClick={createApiKey}>{t("admin.btn_create")}</button>
         </div>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>Nazwa</th><th>Prefix</th><th>Zakresy</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>{t("admin.col_name")}</th><th>{t("admin.col_prefix")}</th><th>{t("admin.col_scopes")}</th><th>{t("admin.col_status")}</th><th></th></tr></thead>
             <tbody>
               {apiKeys.map((k) => (
                 <tr key={k.id}>
                   <td>{k.name}</td>
                   <td className="mono" style={{ fontSize: 12 }}>{k.prefix}…</td>
                   <td style={{ fontSize: 12 }}>{(k.scopes || []).join(", ")}</td>
-                  <td>{k.revoked ? <span className="pill pill-negative">unieważniony</span> : <span className="pill pill-positive">aktywny</span>}</td>
-                  <td>{!k.revoked && <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => revokeApiKey(k.id)}>Unieważnij</button>}</td>
+                  <td>{k.revoked ? <span className="pill pill-negative">{t("admin.revoked")}</span> : <span className="pill pill-positive">{t("admin.enabled")}</span>}</td>
+                  <td>{!k.revoked && <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => revokeApiKey(k.id)}>{t("admin.btn_revoke")}</button>}</td>
                 </tr>
               ))}
-              {apiKeys.length === 0 && <tr><td colSpan={5} className="muted">Brak kluczy</td></tr>}
+              {apiKeys.length === 0 && <tr><td colSpan={5} className="muted">{t("admin.no_api_keys")}</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="section">Kopie zapasowe</h2>
+        <h2 className="section">{t("admin.section_backup")}</h2>
         {backupSchedule && (
           <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
             Harmonogram: godzina {backupSchedule.hour}:00, retencja {backupSchedule.retention} kopii. Ostatnia: {backupSchedule.lastRun ?? "brak"}.
           </p>
         )}
-        <button className="btn btn-primary" onClick={runBackup}>Utwórz kopię teraz</button>
+        <button className="btn btn-primary" onClick={runBackup}>{t("admin.btn_run_backup")}</button>
       </div>
 
       <div className="card">
-        <h2 className="section">Historia cen</h2>
+        <h2 className="section">{t("admin.section_price_history")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>Produkt</th><th className="num">Cena</th><th>Data</th></tr></thead>
+            <thead><tr><th>{t("admin.col_product")}</th><th className="num">{t("admin.col_price")}</th><th>{t("admin.col_date")}</th></tr></thead>
             <tbody>
               {priceHistory.map((p, i) => (
                 <tr key={i}>
@@ -321,17 +323,17 @@ export default function AdminDashboard() {
                   <td style={{ fontSize: 12 }}>{p.at}</td>
                 </tr>
               ))}
-              {priceHistory.length === 0 && <tr><td colSpan={3} className="muted">Brak historii</td></tr>}
+              {priceHistory.length === 0 && <tr><td colSpan={3} className="muted">{t("admin.no_history")}</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="section">Dziennik doręczeń webhooków</h2>
+        <h2 className="section">{t("admin.section_deliveries")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>Data</th><th>Zdarzenie</th><th>Status</th><th>Próby</th><th>Błąd</th><th>Kod</th></tr></thead>
+            <thead><tr><th>{t("admin.col_date")}</th><th>{t("archive.col_items")}</th><th>{t("admin.col_status")}</th><th>{t("admin.col_attempts")}</th><th>{t("admin.col_error")}</th><th>{t("admin.col_code")}</th></tr></thead>
             <tbody>
               {deliveries.map((d) => (
                 <tr key={d.id}>
@@ -343,28 +345,28 @@ export default function AdminDashboard() {
                   <td className="num">{d.statusCode ?? "—"}</td>
                 </tr>
               ))}
-              {deliveries.length === 0 && <tr><td colSpan={4} className="muted">Brak doręczeń</td></tr>}
+              {deliveries.length === 0 && <tr><td colSpan={6} className="muted">{t("admin.no_deliveries")}</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="section">Śledzenie dostaw</h2>
+        <h2 className="section">{t("admin.section_tracking")}</h2>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
           <input className="input" placeholder="Nr zamówienia (z-1001)" value={trackOrder} onChange={(e) => setTrackOrder(e.target.value)} style={{ width: 160 }} />
           <input className="input" placeholder="Kurier" value={trackCourier} onChange={(e) => setTrackCourier(e.target.value)} style={{ width: 120 }} />
           <input className="input" placeholder="Numer przesyłki" value={trackNumber} onChange={(e) => setTrackNumber(e.target.value)} style={{ width: 160 }} />
           <input className="input" type="date" value={trackEta} onChange={(e) => setTrackEta(e.target.value)} style={{ width: 160 }} />
-          <button className="btn btn-primary" onClick={setTracking}>Ustaw</button>
+          <button className="btn btn-primary" onClick={setTracking}>{t("admin.btn_set_tracking")}</button>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="section">Rozliczenia (szacunek)</h2>
+        <h2 className="section">{t("admin.section_settlements")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>Sklep</th><th className="num">Przychód</th><th className="num">Koszt (60%)</th><th className="num">Marża</th></tr></thead>
+            <thead><tr><th>{t("admin.col_shop")}</th><th className="num">{t("admin.col_revenue")}</th><th className="num">{t("admin.col_cost")}</th><th className="num">{t("admin.col_margin")}</th></tr></thead>
             <tbody>
               {SHOPS.map((s) => {
                 const rev = SALES.filter((x) => x.shop === s.id).reduce((a, b) => a + b.revenue, 0);
@@ -381,30 +383,30 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
-        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>Szacunek na podstawie sprzedaży. Koszt = 60% przychodu.</p>
+        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>{t("admin.settlement_hint")}</p>
       </div>
 
       <div className="card">
-        <h2 className="section">Uwierzytelnianie dwuskładnikowe (2FA)</h2>
+        <h2 className="section">{t("admin.section_2fa")}</h2>
         <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
-          Status: {twoFaEnabled ? <span className="pill pill-positive">włączone</span> : <span className="pill pill-warning">wyłączone</span>}
+          Status: {twoFaEnabled ? <span className="pill pill-positive">{t("admin.enabled")}</span> : <span className="pill pill-warning">{t("admin.disabled")}</span>}
         </p>
         {!twoFaEnabled && !twoFaSecret && (
-          <button className="btn btn-primary" onClick={setup2fa}>Włącz 2FA</button>
+          <button className="btn btn-primary" onClick={setup2fa}>{t("admin.btn_enable_2fa")}</button>
         )}
         {twoFaSecret && (
           <div className="stack" style={{ gap: 8 }}>
-            <div className="muted" style={{ fontSize: 12 }}>Sekret: <span className="mono">{twoFaSecret}</span></div>
-            <div className="muted" style={{ fontSize: 12, wordBreak: "break-all" }}>URI: {twoFaUri}</div>
-            <input className="input" placeholder="Kod 6-cyfrowy" value={twoFaCode} onChange={(e) => setTwoFaCode(e.target.value)} style={{ width: 160 }} />
-            <button className="btn btn-primary" onClick={verify2fa}>Weryfikuj</button>
+            <div className="muted" style={{ fontSize: 12 }}>{t("admin.secret_label")} <span className="mono">{twoFaSecret}</span></div>
+            <div className="muted" style={{ fontSize: 12, wordBreak: "break-all" }}>{t("admin.uri_label")}: {twoFaUri}</div>
+            <input className="input" placeholder={t("admin.code_placeholder")} value={twoFaCode} onChange={(e) => setTwoFaCode(e.target.value)} style={{ width: 160 }} />
+            <button className="btn btn-primary" onClick={verify2fa}>{t("admin.btn_verify_2fa")}</button>
           </div>
         )}
         {twoFaMsg && <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>{twoFaMsg}</p>}
       </div>
 
       <div className="card">
-        <h2 className="section">Ilości minimalne (per sklep × produkt)</h2>
+        <h2 className="section">{t("admin.section_min_qty")}</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
             <thead>
@@ -437,9 +439,7 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
-        <p className="muted" style={{ marginTop: 12, fontSize: 12 }}>
-          Pokazano pierwsze 12 pozycji. Zmiany zapisywane są w bazie MS SQL (ERP) — tu edycja demonstracyjna.
-        </p>
+        <p className="muted" style={{ marginTop: 12, fontSize: 12 }}>{t("admin.first_12_products")}</p>
       </div>
     </div>
   );

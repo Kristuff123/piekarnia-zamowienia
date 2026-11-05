@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import { useT } from "../lib/i18n";
 import { PRODUCTS, MIN_QTY, SHOPS, Order, ORDERS, CAKES, ALLERGIES, Cake, CakeConfig, OrderLine, TEMPLATES, reserveStock } from "../lib/data";
 import { apiFetch } from "../lib/api";
 import { Plus, Trash2 } from "lucide-react";
 
 export default function OrderPage() {
   const { user } = useAuth();
+  const { t } = useT();
   const navigate = useNavigate();
   const location = useLocation();
   const shopId = user?.shops[0] ?? "s1";
@@ -198,10 +200,10 @@ export default function OrderPage() {
   if (submitted) {
     return (
       <div className="card" style={{ maxWidth: 520 }}>
-        <h1 className="title">Zamówienie wysłane</h1>
-        <p className="muted">Nr {submitted.id} · podpisane przez {user?.name}</p>
+        <h1 className="title">{t("order.order_sent")}</h1>
+        <p className="muted">{t("order.order_sent_detail", { id: submitted.id, name: user?.name ?? "" })}</p>
         <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => { setSubmitted(null); navigate("/archiwum"); }}>
-          Zobacz archiwum
+          {t("order.btn_see_archive")}
         </button>
       </div>
     );
@@ -210,27 +212,27 @@ export default function OrderPage() {
   return (
     <div className="stack">
       <div>
-        <h1 className="title">Nowe zamówienie · {shop.name}</h1>
-        <p className="muted">Asortyment z magazynu głównego. Ilości minimalne ustawione przez administratora.</p>
+        <h1 className="title">{t("order.title", { shop: shop.name })}</h1>
+        <p className="muted">{t("order.subtitle")}</p>
       </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button className={`btn ${tab === "produkty" ? "btn-primary" : ""}`} onClick={() => setTab("produkty")}>Asortyment stały</button>
-        <button className={`btn ${tab === "torty" ? "btn-primary" : ""}`} onClick={() => setTab("torty")}>Torty (konfigurator)</button>
-        <button className="btn" onClick={() => setScanning(true)}>Skanuj kod</button>
-        <button className="btn" onClick={repeatLast}>Powtórz ostatnie</button>
+        <button className={`btn ${tab === "produkty" ? "btn-primary" : ""}`} onClick={() => setTab("produkty")}>{t("order.tab_products")}</button>
+        <button className={`btn ${tab === "torty" ? "btn-primary" : ""}`} onClick={() => setTab("torty")}>{t("order.tab_cakes")}</button>
+        <button className="btn" onClick={() => setScanning(true)}>{t("order.btn_scan")}</button>
+        <button className="btn" onClick={repeatLast}>{t("order.btn_repeat")}</button>
         <select className="input" style={{ width: 200 }} onChange={(e) => loadTemplate(e.target.value)} defaultValue="">
-          <option value="">Wczytaj szablon…</option>
+          <option value="">{t("order.load_template")}</option>
           {TEMPLATES.filter((t) => t.shop === shopId).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
-        <input className="input" style={{ width: 160 }} placeholder="Nazwa szablonu" value={templateName} onChange={(e) => setTemplateName(e.target.value)} />
-        <button className="btn" onClick={saveTemplate}>Zapisz jako szablon</button>
+        <input className="input" style={{ width: 160 }} placeholder={t("order.template_name")} value={templateName} onChange={(e) => setTemplateName(e.target.value)} />
+        <button className="btn" onClick={saveTemplate}>{t("order.btn_save_template")}</button>
       </div>
 
       {scanning && (
         <div className="card" style={{ padding: 0, overflow: "hidden", position: "relative" }}>
           <video ref={videoRef} autoPlay playsInline style={{ width: "100%", maxHeight: 300, objectFit: "cover", display: "block" }} />
-          <button className="btn" style={{ position: "absolute", top: 8, right: 8 }} onClick={() => setScanning(false)}>Zamknij</button>
+          <button className="btn" style={{ position: "absolute", top: 8, right: 8 }} onClick={() => setScanning(false)}>{t("order.btn_close")}</button>
         </div>
       )}
 
@@ -238,14 +240,14 @@ export default function OrderPage() {
         <>
           <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
             {["Wszystkie", ...Array.from(new Set(PRODUCTS.map((p) => p.category)))].map((c) => (
-              <button key={c} className={`btn ${catFilter === c ? "btn-primary" : ""}`} style={{ height: 28, fontSize: 12 }} onClick={() => setCatFilter(c)}>{c}</button>
+              <button key={c} className={`btn ${catFilter === c ? "btn-primary" : ""}`} style={{ height: 28, fontSize: 12 }} onClick={() => setCatFilter(c)}>{c === "Wszystkie" ? t("order.filter_all") : c}</button>
             ))}
           </div>
           <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
             <table className="table">
               <thead>
-                <tr><th>Produkt</th><th>Kategoria</th><th className="num">Cena</th><th className="num">Min. ilość</th><th className="num">Zamawiam</th><th className="num">Wartość</th></tr>
+                <tr><th>{t("order.table_product")}</th><th>{t("order.table_category")}</th><th className="num">{t("order.table_price")}</th><th className="num">{t("order.table_min_qty")}</th><th className="num">{t("order.table_order_qty")}</th><th className="num">{t("order.table_value")}</th></tr>
               </thead>
               <tbody>
                 {PRODUCTS.filter((p) => catFilter === "Wszystkie" || p.category === catFilter).map((p) => (
@@ -294,9 +296,9 @@ export default function OrderPage() {
                       <tr key={i}>
                         <td>
                           <div style={{ fontWeight: 500 }}>{l.label}</div>
-                          {l.cakeConfig?.inscription && <div className="muted" style={{ fontSize: 12 }}>Napis: „{l.cakeConfig.inscription}"</div>}
-                          {l.cakeConfig?.extras?.length ? <div className="muted" style={{ fontSize: 12 }}>Dodatki: {l.cakeConfig.extras.join(", ")}</div> : null}
-                          {l.cakeConfig?.allergies?.length ? <div className="muted" style={{ fontSize: 12 }}>Alergie: {l.cakeConfig.allergies.join(", ")}</div> : null}
+                          {l.cakeConfig?.inscription && <div className="muted" style={{ fontSize: 12 }}>{t("order.cake_inscription_label")} „{l.cakeConfig.inscription}"</div>}
+                          {l.cakeConfig?.extras?.length ? <div className="muted" style={{ fontSize: 12 }}>{t("order.cake_extras_label")} {l.cakeConfig.extras.join(", ")}</div> : null}
+                          {l.cakeConfig?.allergies?.length ? <div className="muted" style={{ fontSize: 12 }}>{t("order.cake_allergies_label")} {l.cakeConfig.allergies.join(", ")}</div> : null}
                         </td>
                         <td className="num">{l.qty}</td>
                         <td className="num">{(l.qty * l.unitPrice).toFixed(2)} zł</td>
@@ -317,27 +319,27 @@ export default function OrderPage() {
             <h2 className="section">{activeCake.name}</h2>
             <div className="stack">
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="kpi-label">Rozmiar</span>
+                <span className="kpi-label">{t("order.cake_size")}</span>
                 <select className="input" value={cakeSize} onChange={(e) => setCakeSize(e.target.value)}>
                   {activeCake.sizes.map((s) => <option key={s.id} value={s.id}>{s.label} — {s.price.toFixed(2)} zł</option>)}
                 </select>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="kpi-label">Smak</span>
+                <span className="kpi-label">{t("order.cake_flavor")}</span>
                 <select className="input" value={cakeFlavor} onChange={(e) => setCakeFlavor(e.target.value)}>
                   {activeCake.flavors.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
                 </select>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="kpi-label">Ilość</span>
+                <span className="kpi-label">{t("order.cake_qty")}</span>
                 <input className="input" type="number" min={1} value={cakeQty} onChange={(e) => setCakeQty(Number(e.target.value))} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="kpi-label">Napis na torcie</span>
-                <input className="input" placeholder="np. Wszystkiego najlepszego!" value={inscription} onChange={(e) => setInscription(e.target.value)} />
+                <span className="kpi-label">{t("order.cake_inscription")}</span>
+                <input className="input" placeholder={t("order.cake_inscription_placeholder")} value={inscription} onChange={(e) => setInscription(e.target.value)} />
               </label>
               <div>
-                <div className="kpi-label" style={{ marginBottom: 6 }}>Dodatki</div>
+                <div className="kpi-label" style={{ marginBottom: 6 }}>{t("order.cake_extras")}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {activeCake.extras.map((ex) => (
                     <button key={ex} className={`btn ${extras.includes(ex) ? "btn-primary" : ""}`} style={{ height: 28, fontSize: 12 }} onClick={() => toggle(extras, ex, setExtras)}>{ex}</button>
@@ -345,7 +347,7 @@ export default function OrderPage() {
                 </div>
               </div>
               <div>
-                <div className="kpi-label" style={{ marginBottom: 6 }}>Alergie / uwagi</div>
+                <div className="kpi-label" style={{ marginBottom: 6 }}>{t("order.cake_allergies")}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {ALLERGIES.map((a) => (
                     <button key={a} className={`btn ${allergies.includes(a) ? "btn-primary" : ""}`} style={{ height: 28, fontSize: 12 }} onClick={() => toggle(allergies, a, setAllergies)}>{a}</button>
@@ -353,8 +355,8 @@ export default function OrderPage() {
                 </div>
               </div>
               <div className="row" style={{ justifyContent: "flex-end", gap: 8 }}>
-                <button className="btn" onClick={() => setActiveCake(null)}>Anuluj</button>
-                <button className="btn btn-primary" onClick={addCake}>Dodaj do zamówienia</button>
+                <button className="btn" onClick={() => setActiveCake(null)}>{t("order.btn_cancel")}</button>
+                <button className="btn btn-primary" onClick={addCake}>{t("order.btn_add_cake")}</button>
               </div>
             </div>
           </div>
@@ -364,28 +366,28 @@ export default function OrderPage() {
       <div className="card">
         <div className="row" style={{ justifyContent: "space-between" }}>
           <div>
-            <div className="kpi-label">Wartość zamówienia</div>
+            <div className="kpi-label">{t("order.order_value")}</div>
             <div className="kpi">{total.toFixed(2)} zł</div>
           </div>
           <div className="stack" style={{ alignItems: "flex-end" }}>
-            <textarea className="input" placeholder="Uwagi do zamówienia (opcjonalnie)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: 320, height: 60, padding: 8 }} />
+            <textarea className="input" placeholder={t("order.note_placeholder")} value={note} onChange={(e) => setNote(e.target.value)} style={{ width: 320, height: 60, padding: 8 }} />
             <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
               <input type="checkbox" checked={recurring !== "none"} onChange={(e) => setRecurring(e.target.checked ? "weekly" : "none")} />
-              Zamówienie cykliczne
+              {t("order.recurring_label")}
             </label>
             {recurring !== "none" && (
               <select className="input" value={recurring} onChange={(e) => setRecurring(e.target.value as "weekly" | "monthly")} style={{ width: 200 }}>
-                <option value="weekly">Co tydzień</option>
-                <option value="monthly">Co miesiąc</option>
+                <option value="weekly">{t("order.recurring_weekly")}</option>
+                <option value="monthly">{t("order.recurring_monthly")}</option>
               </select>
             )}
             {!(user?.permissions?.includes("order") || user?.role === "admin" || user?.role === "manager") && (
-              <div style={{ color: "var(--negative)", fontSize: 12 }}>Brak uprawnienia do składania zamówień</div>
+              <div style={{ color: "var(--negative)", fontSize: 12 }}>{t("order.order_no_permission")}</div>
             )}
-            <button className="btn btn-primary" onClick={submit} disabled={!(user?.permissions?.includes("order") || user?.role === "admin" || user?.role === "manager")}>Wyślij zamówienie</button>
+            <button className="btn btn-primary" onClick={submit} disabled={!(user?.permissions?.includes("order") || user?.role === "admin" || user?.role === "manager")}>{t("order.btn_send")}</button>
           </div>
         </div>
-        <p className="muted" style={{ marginTop: 12, fontSize: 12 }}>Zamówienie zostanie podpisane jako: {user?.name} ({user?.login})</p>
+        <p className="muted" style={{ marginTop: 12, fontSize: 12 }}>{t("order.order_signed_as", { name: user?.name ?? "", login: user?.login ?? "" })}</p>
       </div>
     </div>
   );
