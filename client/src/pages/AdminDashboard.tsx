@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [keyName, setKeyName] = useState("");
   const [backupSchedule, setBackupSchedule] = useState<any>(null);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
   const [keyScopes, setKeyScopes] = useState("read");
   const [whUrl, setWhUrl] = useState("");
   const [whEvents, setWhEvents] = useState("document.indexed");
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
     apiFetch<any[]>("/api-keys").then((d) => { if (d) setApiKeys(d); });
     apiFetch<any>("/backup-schedule").then((d) => { if (d) setBackupSchedule(d); });
     apiFetch<any[]>("/price-history").then((d) => { if (d) setPriceHistory(d); });
+    apiFetch<any[]>("/deliveries").then((d) => { if (d) setDeliveries(d); });
   }, []);
   const createWebhook = async () => {
     const res = await apiFetch<any>("/webhooks", { method: "POST", body: JSON.stringify({ url: whUrl, events: whEvents.split(",").map((e) => e.trim()) }) });
@@ -277,6 +279,26 @@ export default function AdminDashboard() {
                 </tr>
               ))}
               {priceHistory.length === 0 && <tr><td colSpan={3} className="muted">Brak historii</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="section">Dziennik doręczeń webhooków</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead><tr><th>Data</th><th>Zdarzenie</th><th>Status</th><th>Kod</th></tr></thead>
+            <tbody>
+              {deliveries.map((d) => (
+                <tr key={d.id}>
+                  <td style={{ fontSize: 12 }}>{d.at}</td>
+                  <td style={{ fontSize: 12 }}>{d.event}</td>
+                  <td><span className={`pill ${d.status === "sent" ? "pill-positive" : "pill-negative"}`}>{d.status}</span></td>
+                  <td className="num">{d.statusCode}</td>
+                </tr>
+              ))}
+              {deliveries.length === 0 && <tr><td colSpan={4} className="muted">Brak doręczeń</td></tr>}
             </tbody>
           </table>
         </div>

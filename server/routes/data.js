@@ -137,6 +137,11 @@ router.get("/webhooks/:id/deliveries", auth, (req, res) => {
   res.json(DELIVERIES.filter((d) => d.webhook === req.params.id));
 });
 
+router.get("/deliveries", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  res.json(DELIVERIES);
+});
+
 // --- API keys (maszynowe) ---
 router.get("/api-keys", auth, (req, res) => {
   if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
