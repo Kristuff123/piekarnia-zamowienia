@@ -15,6 +15,10 @@ const STOCK = [
 
 const crypto = require("crypto");
 
+const API_KEYS = [];
+
+function hashKey(k) { return crypto.createHash("sha256").update(k).digest("hex"); }
+
 const WEBHOOKS = [];
 const DELIVERIES = [];
 
@@ -124,6 +128,30 @@ router.post("/webhooks/:id/test", auth, (req, res) => {
 router.get("/webhooks/:id/deliveries", auth, (req, res) => {
   if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
   res.json(DELIVERIES.filter((d) => d.webhook === req.params.id));
+});
+
+// --- API keys (maszynowe) ---
+router.get("/api-keys", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  res.json(API_KEYS.map((k) => ({ id: k.id, name: k.name, prefix: k.prefix, scopes: k.scopes, createdAt: k.createdAt, revoked: k.revoked })));
+});
+
+router.post("/api-keys", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  const { name, scopes } = req.body || {};
+  if (!name) return res.status(400).json({ error: "Brak nazwy" });
+  const raw = "kx_" + crypto.randomBytes(24).toString("base64url");
+  const key = { id: "key-" + (API_KEYS.length + 1), name, prefix: raw.slice(0, 12), hash: hashKey(raw), scopes: scopes || ["read"], createdAt: new Date().toISOString().slice(0, 16).replace("T", " "), revoked: false };
+  API_KEYS.push(key);
+  res.status(201).json({ ...key, key: raw, hash: undefined }); // pełny klucz raz
+});
+
+router.delete("/api-keys/:id", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  const k = API_KEYS.find((x) => x.id === req.params.id);
+  if (!k) return res.status(404).json({ error: "not found" });
+  k.revoked = true;
+  res.json({ ok: true });
 });
 
 module.exports = router;

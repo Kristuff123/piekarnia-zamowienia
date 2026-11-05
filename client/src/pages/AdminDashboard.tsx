@@ -9,6 +9,9 @@ export default function AdminDashboard() {
   const [stock, setStock] = useState<StockItem[]>(STOCK);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>(MOCK_AUDIT);
   const [webhooks, setWebhooks] = useState<any[]>([]);
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [keyName, setKeyName] = useState("");
+  const [keyScopes, setKeyScopes] = useState("read");
   const [whUrl, setWhUrl] = useState("");
   const [whEvents, setWhEvents] = useState("document.indexed");
   const [adjProduct, setAdjProduct] = useState(PRODUCTS[0]?.id ?? "");
@@ -18,6 +21,7 @@ export default function AdminDashboard() {
     apiFetch<AuditEntry[]>("/audit").then((d) => { if (d) setAuditLog(d); });
     apiFetch<StockItem[]>("/stock").then((d) => { if (d) setStock(d); });
     apiFetch<any[]>("/webhooks").then((d) => { if (d) setWebhooks(d); });
+    apiFetch<any[]>("/api-keys").then((d) => { if (d) setApiKeys(d); });
   }, []);
   const createWebhook = async () => {
     const res = await apiFetch<any>("/webhooks", { method: "POST", body: JSON.stringify({ url: whUrl, events: whEvents.split(",").map((e) => e.trim()) }) });
@@ -30,6 +34,14 @@ export default function AdminDashboard() {
   const deleteWebhook = async (id: string) => {
     await apiFetch(`/webhooks/${id}`, { method: "DELETE" });
     setWebhooks((prev) => prev.filter((w) => w.id !== id));
+  };
+  const createApiKey = async () => {
+    const res = await apiFetch<any>("/api-keys", { method: "POST", body: JSON.stringify({ name: keyName, scopes: keyScopes.split(",").map((s) => s.trim()) }) });
+    if (res?.key) { alert(`Klucz (pokaże się raz): ${res.key}`); setApiKeys((prev) => [...prev, res]); setKeyName(""); }
+  };
+  const revokeApiKey = async (id: string) => {
+    await apiFetch(`/api-keys/${id}`, { method: "DELETE" });
+    setApiKeys((prev) => prev.map((k) => (k.id === id ? { ...k, revoked: true } : k)));
   };
 
   const adjustStock = async () => {
@@ -202,6 +214,32 @@ export default function AdminDashboard() {
                 </tr>
               ))}
               {webhooks.length === 0 && <tr><td colSpan={4} className="muted">Brak webhooków</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="section">Klucze API (maszynowe)</h2>
+        <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          <input className="input" placeholder="Nazwa klucza" value={keyName} onChange={(e) => setKeyName(e.target.value)} style={{ width: 200 }} />
+          <input className="input" placeholder="zakresy (przecinek)" value={keyScopes} onChange={(e) => setKeyScopes(e.target.value)} style={{ width: 200 }} />
+          <button className="btn btn-primary" onClick={createApiKey}>Utwórz</button>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead><tr><th>Nazwa</th><th>Prefix</th><th>Zakresy</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              {apiKeys.map((k) => (
+                <tr key={k.id}>
+                  <td>{k.name}</td>
+                  <td className="mono" style={{ fontSize: 12 }}>{k.prefix}…</td>
+                  <td style={{ fontSize: 12 }}>{(k.scopes || []).join(", ")}</td>
+                  <td>{k.revoked ? <span className="pill pill-negative">unieważniony</span> : <span className="pill pill-positive">aktywny</span>}</td>
+                  <td>{!k.revoked && <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => revokeApiKey(k.id)}>Unieważnij</button>}</td>
+                </tr>
+              ))}
+              {apiKeys.length === 0 && <tr><td colSpan={5} className="muted">Brak kluczy</td></tr>}
             </tbody>
           </table>
         </div>
