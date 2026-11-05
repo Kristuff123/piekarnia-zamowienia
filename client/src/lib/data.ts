@@ -269,7 +269,9 @@ export interface Order {
   user: string;
   lines: OrderLine[];
   createdAt: string;
-  status: "wysłane" | "w realizacji" | "zrealizowane";
+  status: "wysłane" | "w realizacji" | "zrealizowane" | "anulowane";
+  note?: string;
+  recurring?: { every: "weekly" | "monthly"; nextRun: string };
   history: OrderStatusEvent[];
 }
 

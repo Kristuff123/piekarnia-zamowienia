@@ -21,6 +21,7 @@ export default function OrderPage() {
   });
   const [cakeLines, setCakeLines] = useState<OrderLine[]>([]);
   const [note, setNote] = useState("");
+  const [recurring, setRecurring] = useState<"none" | "weekly" | "monthly">("none");
   const [submitted, setSubmitted] = useState<Order | null>(null);
   const [templateName, setTemplateName] = useState("");
 
@@ -146,6 +147,8 @@ export default function OrderPage() {
       lines,
       createdAt: now,
       status: "wysłane",
+      note: note.trim() || undefined,
+      recurring: recurring !== "none" ? { every: recurring, nextRun: new Date(Date.now() + (recurring === "weekly" ? 7 : 30) * 86400000).toISOString().slice(0, 10) } : undefined,
       history: [{ status: "wysłane", at: now }],
     };
     ORDERS.unshift(order);
@@ -318,6 +321,16 @@ export default function OrderPage() {
           </div>
           <div className="stack" style={{ alignItems: "flex-end" }}>
             <textarea className="input" placeholder="Uwagi do zamówienia (opcjonalnie)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: 320, height: 60, padding: 8 }} />
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
+              <input type="checkbox" checked={recurring !== "none"} onChange={(e) => setRecurring(e.target.checked ? "weekly" : "none")} />
+              Zamówienie cykliczne
+            </label>
+            {recurring !== "none" && (
+              <select className="input" value={recurring} onChange={(e) => setRecurring(e.target.value as "weekly" | "monthly")} style={{ width: 200 }}>
+                <option value="weekly">Co tydzień</option>
+                <option value="monthly">Co miesiąc</option>
+              </select>
+            )}
             {!(user?.permissions?.includes("order") || user?.role === "admin" || user?.role === "manager") && (
               <div style={{ color: "var(--negative)", fontSize: 12 }}>Brak uprawnienia do składania zamówień</div>
             )}
