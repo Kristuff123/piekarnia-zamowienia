@@ -24,12 +24,13 @@ export default function LoginPage() {
   return (
     <div style={{ minHeight: "100vh", display: "grid", gridTemplateColumns: "1fr 1fr", background: "var(--ground)" }}>
       <div style={{ position: "relative", overflow: "hidden", background: "var(--raised)" }}>
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)" }} />
         <img
           src="https://bagietka.pl/wp-content/uploads/2025/11/Chleb-pszenny-2.jpg"
           alt="Świeży chleb z piekarni"
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         />
-        <div style={{ position: "absolute", left: 32, bottom: 32, color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,.4)" }}>
+        <div style={{ position: "absolute", left: 32, bottom: 32, color: "#fff" }}>
           <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>Piekarnia Bagietka</div>
           <div style={{ fontSize: 14, opacity: 0.9 }}>Manufaktura mistrzowskich wypieków · Chojnice</div>
         </div>

@@ -57,7 +57,7 @@ export default function ManagerDashboard() {
         </div>
         <div className="card">
           <div className="kpi-label">{t("manager.kpi_best_shop")}</div>
-          <div style={{ marginTop: 6, fontSize: 16, fontWeight: 600 }}>{byShop.slice().sort((a, b) => b.przychód - a.przychód)[0]?.name ?? "—"}</div>
+          <div style={{ marginTop: 6, fontSize: 16, fontWeight: 600 }}>{byShop.slice().sort((a, b) => b.przychód - a.przychód)[0]?.name ?? "-"}</div>
           <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("manager.kpi_by_revenue")}</div>
         </div>
       </div>

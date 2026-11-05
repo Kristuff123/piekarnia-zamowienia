@@ -14,7 +14,7 @@ export default function ShopDashboard() {
   const totalQty = shopSales.reduce((a, b) => a + b.qty, 0);
   const sorted = shopSales.slice().sort((a, b) => b.qty - a.qty);
   const topProduct = sorted[0];
-  const topName = PRODUCTS.find((p) => p.id === topProduct?.product)?.name ?? "—";
+  const topName = PRODUCTS.find((p) => p.id === topProduct?.product)?.name ?? "-";
   const avgOrder = totalRev / Math.max(1, ORDERS.filter((o) => o.shop === shopId).length);
   const myOrders = ORDERS.filter((o) => o.shop === shopId);
 

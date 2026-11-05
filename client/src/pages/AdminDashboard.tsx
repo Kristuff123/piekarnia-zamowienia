@@ -249,7 +249,7 @@ export default function AdminDashboard() {
       <div className="card">
         <h2 className="section">{t("admin.section_webhooks")}</h2>
         <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-          <input className="input" placeholder="https://example.com/hook" value={whUrl} onChange={(e) => setWhUrl(e.target.value)} style={{ flex: 1, minWidth: 240 }} />
+          <input className="input" placeholder="https://piekarnia.pl/webhook" value={whUrl} onChange={(e) => setWhUrl(e.target.value)} style={{ flex: 1, minWidth: 240 }} />
           <input className="input" placeholder="zdarzenia (przecinek)" value={whEvents} onChange={(e) => setWhEvents(e.target.value)} style={{ width: 220 }} />
           <button className="btn btn-primary" onClick={createWebhook}>{t("admin.btn_add")}</button>
         </div>
@@ -341,8 +341,8 @@ export default function AdminDashboard() {
                   <td style={{ fontSize: 12 }}>{d.event}</td>
                   <td><span className={`pill ${d.status === "sent" ? "pill-positive" : d.status === "failed" ? "pill-negative" : "pill-warning"}`}>{d.status}</span></td>
                   <td className="num">{d.attempts ?? 0}</td>
-                  <td style={{ fontSize: 11, color: "var(--negative)" }}>{d.lastError ?? "—"}</td>
-                  <td className="num">{d.statusCode ?? "—"}</td>
+                  <td style={{ fontSize: 11, color: "var(--negative)" }}>{d.lastError ?? "-"}</td>
+                  <td className="num">{d.statusCode ?? "-"}</td>
                 </tr>
               ))}
               {deliveries.length === 0 && <tr><td colSpan={6} className="muted">{t("admin.no_deliveries")}</td></tr>}

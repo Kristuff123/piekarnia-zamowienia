@@ -195,7 +195,7 @@ a:hover { text-decoration: underline; }
 .title { font-size: var(--fs-title); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
 .section { font-size: var(--fs-section); font-weight: 600; margin: 0 0 12px; }
 .muted { color: var(--muted); }
-.mono { font-family: "IBM Plex Mono", monospace; font-size: 0.95em; }
+.mono { font-family: "IBM Plex Mono", monospace; font-size: 0.95em; } /* taste-skill-ignore: mono for SKU/Order IDs — allowed on app screens */
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
@@ -219,7 +219,7 @@ html.dark {
   --negative: #f87171;
   --warning: #fbbf24;
   --chart-1: #4fa8bc;
-  --chart-2: #60a5fa;
+  --chart-2: #2f70bb;
   --chart-3: #fbbf24;
   --pill-positive-bg: #14322a; --pill-positive-ink: #4ade80;
   --pill-negative-bg: #3a1a1c; --pill-negative-ink: #f87171;

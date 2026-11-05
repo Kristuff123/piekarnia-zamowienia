@@ -321,7 +321,7 @@ export default function OrderPage() {
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span className="kpi-label">{t("order.cake_size")}</span>
                 <select className="input" value={cakeSize} onChange={(e) => setCakeSize(e.target.value)}>
-                  {activeCake.sizes.map((s) => <option key={s.id} value={s.id}>{s.label} — {s.price.toFixed(2)} zł</option>)}
+                  {activeCake.sizes.map((s) => <option key={s.id} value={s.id}>{s.label} - {s.price.toFixed(2)} zł</option>)}
                 </select>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
