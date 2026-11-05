@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import { useT } from "../lib/i18n";
 import { SHOPS, STOCK, PRODUCTS } from "../lib/data";
 import { LogOut, LayoutDashboard, ShoppingCart, Archive, BarChart3, Settings, Store, Bell, X, Sun, Moon } from "lucide-react";
 
 export default function Shell() {
   const { user, logout } = useAuth();
+  const { lang, setLang, t } = useT();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
@@ -95,6 +97,9 @@ export default function Shell() {
           </div>
           <button className="btn btn-ghost" aria-label="Przełącz motyw" onClick={() => setDark((v) => !v)}>
             {dark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => setLang(lang === "pl" ? "en" : "pl")}>
+            {lang === "pl" ? "EN" : "PL"}
           </button>
           <div className="muted" style={{ fontSize: 13 }}>
             {user.name} · {user.role}

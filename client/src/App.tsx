@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./lib/auth";
+import { LanguageProvider } from "./lib/i18n";
 import Shell from "./components/Shell";
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const ShopDashboard = lazy(() => import("./pages/ShopDashboard"));
@@ -18,6 +19,7 @@ function Protected({ children, roles }: { children: React.ReactNode; roles?: str
 
 export default function App() {
   return (
+    <LanguageProvider>
     <AuthProvider>
       <Suspense fallback={<div style={{ padding: 32 }} className="muted">Ładowanie…</div>}>
       <Routes>
@@ -39,5 +41,6 @@ export default function App() {
       </Routes>
       </Suspense>
     </AuthProvider>
+    </LanguageProvider>
   );
 }
