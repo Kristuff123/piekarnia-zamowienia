@@ -154,4 +154,29 @@ router.delete("/api-keys/:id", auth, (req, res) => {
   res.json({ ok: true });
 });
 
+// --- Backup ---
+let backupSchedule = { hour: 2, retention: 7, lastRun: null };
+
+router.get("/backup-schedule", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  res.json(backupSchedule);
+});
+
+router.patch("/backup-schedule", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  const { hour, retention } = req.body || {};
+  if (typeof hour === "number") backupSchedule.hour = hour;
+  if (typeof retention === "number") backupSchedule.retention = retention;
+  res.json(backupSchedule);
+});
+
+router.post("/backup-schedule/run", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  backupSchedule.lastRun = new Date().toISOString().slice(0, 16).replace("T", " ");
+  const snapshot = { at: backupSchedule.lastRun, shops: SHOPS.length, products: PRODUCTS.length, orders: 0, stock: STOCK.length };
+  const entry = { id: "a" + (AUDIT_LOG.length + 1), at: backupSchedule.lastRun, user: req.user.login, action: "Kopia zapasowa", target: JSON.stringify(snapshot) };
+  AUDIT_LOG.unshift(entry);
+  res.json({ snapshot, entry });
+});
+
 module.exports = router;

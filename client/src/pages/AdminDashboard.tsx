@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [webhooks, setWebhooks] = useState<any[]>([]);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [keyName, setKeyName] = useState("");
+  const [backupSchedule, setBackupSchedule] = useState<any>(null);
   const [keyScopes, setKeyScopes] = useState("read");
   const [whUrl, setWhUrl] = useState("");
   const [whEvents, setWhEvents] = useState("document.indexed");
@@ -22,6 +23,7 @@ export default function AdminDashboard() {
     apiFetch<StockItem[]>("/stock").then((d) => { if (d) setStock(d); });
     apiFetch<any[]>("/webhooks").then((d) => { if (d) setWebhooks(d); });
     apiFetch<any[]>("/api-keys").then((d) => { if (d) setApiKeys(d); });
+    apiFetch<any>("/backup-schedule").then((d) => { if (d) setBackupSchedule(d); });
   }, []);
   const createWebhook = async () => {
     const res = await apiFetch<any>("/webhooks", { method: "POST", body: JSON.stringify({ url: whUrl, events: whEvents.split(",").map((e) => e.trim()) }) });
@@ -42,6 +44,10 @@ export default function AdminDashboard() {
   const revokeApiKey = async (id: string) => {
     await apiFetch(`/api-keys/${id}`, { method: "DELETE" });
     setApiKeys((prev) => prev.map((k) => (k.id === id ? { ...k, revoked: true } : k)));
+  };
+  const runBackup = async () => {
+    const res = await apiFetch<any>("/backup-schedule/run", { method: "POST" });
+    if (res) { setBackupSchedule((s: any) => ({ ...s, lastRun: res.snapshot.at })); alert(`Kopia utworzona: ${res.snapshot.at}`); }
   };
 
   const adjustStock = async () => {
@@ -243,6 +249,16 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="card">
+        <h2 className="section">Kopie zapasowe</h2>
+        {backupSchedule && (
+          <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+            Harmonogram: godzina {backupSchedule.hour}:00, retencja {backupSchedule.retention} kopii. Ostatnia: {backupSchedule.lastRun ?? "brak"}.
+          </p>
+        )}
+        <button className="btn btn-primary" onClick={runBackup}>Utwórz kopię teraz</button>
       </div>
 
       <div className="card">
