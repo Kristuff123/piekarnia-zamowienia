@@ -12,7 +12,7 @@ B2B ordering portal for remote bakery/pastry shops ordering from the central war
 - Client build: `cd client && npm run build`
 - API start (prod): `cd server && npm start`
 
-Tests: `cd server && npm test` (Jest, 9 tests, in-memory; server.js only listens when run directly). No lint script yet.
+Tests: `cd server && npm test` (Jest, 12 tests, in-memory; server.js only listens when run directly). No lint script yet.
 
 ## Architecture
 
