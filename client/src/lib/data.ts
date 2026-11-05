@@ -289,6 +289,7 @@ export interface StockItem {
   qty: number;
   min: number;
   location: string;
+  expiry?: string;
 }
 
 export const ORDERS: Order[] = [
@@ -299,11 +300,11 @@ export const ORDERS: Order[] = [
 export const TEMPLATES: OrderTemplate[] = [];
 
 export const STOCK: StockItem[] = [
-  { product: "p1", qty: 120, min: 50, location: "Magazyn główny" },
-  { product: "p2", qty: 18, min: 30, location: "Magazyn główny" },
-  { product: "p3", qty: 240, min: 100, location: "Magazyn główny" },
-  { product: "p6", qty: 45, min: 60, location: "Magazyn główny" },
-  { product: "p4", qty: 6, min: 10, location: "Magazyn główny" },
+  { product: "p1", qty: 120, min: 50, location: "Magazyn główny", expiry: "2026-11-08" },
+  { product: "p2", qty: 18, min: 30, location: "Magazyn główny", expiry: "2026-11-10" },
+  { product: "p3", qty: 240, min: 100, location: "Magazyn główny", expiry: "2026-11-07" },
+  { product: "p6", qty: 45, min: 60, location: "Magazyn główny", expiry: "2026-11-06" },
+  { product: "p4", qty: 6, min: 10, location: "Magazyn główny", expiry: "2026-11-12" },
 ];
 
 export interface AuditEntry { id: string; at: string; user: string; action: string; target: string; }

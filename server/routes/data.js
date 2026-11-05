@@ -5,6 +5,13 @@ const router = express.Router();
 
 const shopIdSchema = z.string().regex(/^s[0-9]+$/);
 
+const AUDIT_LOG = [
+  { id: "a1", at: "2026-10-29 08:12", user: "anna.sklep1", action: "Złożono zamówienie", target: "z-1001" },
+  { id: "a2", at: "2026-10-29 09:00", user: "maria.manager", action: "Zmiana statusu", target: "z-1001 → w realizacji" },
+  { id: "a3", at: "2026-10-29 09:40", user: "piotr.sklep2", action: "Złożono zamówienie", target: "z-1002" },
+  { id: "a4", at: "2026-10-29 10:15", user: "admin", action: "Zmiana min. ilości", target: "p6 / s1: 30→35" },
+];
+
 const SHOPS = [
   { id: "s1", name: "Sklep Centrum", city: "Warszawa", region: "Mazowieckie" },
   { id: "s2", name: "Sklep Galeria", city: "Kraków", region: "Małopolskie" },
@@ -38,6 +45,15 @@ router.get("/dashboard/:shopId", auth, (req, res) => {
   const parsed = shopIdSchema.safeParse(req.params.shopId);
   if (!parsed.success) return res.status(400).json({ error: "Nieprawidłowy shopId" });
   res.json({ shop: req.params.shopId, revenue: 1234, qty: 567 });
+});
+
+router.get("/audit", auth, (req, res) => res.json(AUDIT_LOG));
+router.post("/audit", auth, (req, res) => {
+  const { action, target } = req.body || {};
+  if (!action || !target) return res.status(400).json({ error: "Brak danych" });
+  const entry = { id: "a" + (AUDIT_LOG.length + 1), at: new Date().toISOString().slice(0, 16).replace("T", " "), user: req.user.login, action, target };
+  AUDIT_LOG.unshift(entry);
+  res.status(201).json(entry);
 });
 
 module.exports = router;

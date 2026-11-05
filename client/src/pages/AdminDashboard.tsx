@@ -1,9 +1,15 @@
-import { useState } from "react";
-import { SHOPS, PRODUCTS, MIN_QTY, SALES, STOCK, AUDIT_LOG } from "../lib/data";
+import { useState, useEffect } from "react";
+import { SHOPS, PRODUCTS, MIN_QTY, SALES, STOCK, AUDIT_LOG as MOCK_AUDIT } from "../lib/data";
 import { USERS } from "../lib/auth";
+import { apiFetch } from "../lib/api";
+import type { AuditEntry } from "../lib/data";
 
 export default function AdminDashboard() {
   const [mins, setMins] = useState(MIN_QTY);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>(MOCK_AUDIT);
+  useEffect(() => {
+    apiFetch<AuditEntry[]>("/audit").then((d) => { if (d) setAuditLog(d); });
+  }, []);
   const totalRev = SALES.reduce((a, b) => a + b.revenue, 0);
   const totalQty = SALES.reduce((a, b) => a + b.qty, 0);
   const lowStock = STOCK.filter((s) => s.qty < s.min);
@@ -114,7 +120,7 @@ export default function AdminDashboard() {
           <table className="table">
             <thead><tr><th>Data</th><th>Użytkownik</th><th>Akcja</th><th>Cel</th></tr></thead>
             <tbody>
-              {AUDIT_LOG.map((a) => (
+              {auditLog.map((a) => (
                 <tr key={a.id}>
                   <td style={{ fontSize: 12 }}>{a.at}</td>
                   <td className="mono" style={{ fontSize: 12 }}>{a.user}</td>

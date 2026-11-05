@@ -1,12 +1,13 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./lib/auth";
-import LoginPage from "./pages/LoginPage";
 import Shell from "./components/Shell";
-import ShopDashboard from "./pages/ShopDashboard";
-import OrderPage from "./pages/OrderPage";
-import ArchivePage from "./pages/ArchivePage";
-import ManagerDashboard from "./pages/ManagerDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const ShopDashboard = lazy(() => import("./pages/ShopDashboard"));
+const OrderPage = lazy(() => import("./pages/OrderPage"));
+const ArchivePage = lazy(() => import("./pages/ArchivePage"));
+const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 function Protected({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ function Protected({ children, roles }: { children: React.ReactNode; roles?: str
 export default function App() {
   return (
     <AuthProvider>
+      <Suspense fallback={<div style={{ padding: 32 }} className="muted">Ładowanie…</div>}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
@@ -35,6 +37,7 @@ export default function App() {
           <Route path="admin" element={<Protected roles={["admin"]}><AdminDashboard /></Protected>} />
         </Route>
       </Routes>
+      </Suspense>
     </AuthProvider>
   );
 }

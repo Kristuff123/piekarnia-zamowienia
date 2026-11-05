@@ -137,6 +137,18 @@ export default function ShopDashboard() {
           </div>
         </div>
         <div className="card">
+          <h2 className="section">Terminy ważności (FEFO)</h2>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+            {STOCK.filter((s) => s.expiry).map((s) => {
+              const p = PRODUCTS.find((x) => x.id === s.product);
+              const days = Math.ceil((new Date(s.expiry!).getTime() - Date.now()) / 86400000);
+              const color = days <= 2 ? "var(--negative)" : days <= 5 ? "var(--warning)" : "var(--text)";
+              return <li key={s.product} style={{ color, marginBottom: 4 }}>{p?.name} — ważność {s.expiry} ({days} dni)</li>;
+            })}
+          </ul>
+        </div>
+
+        <div className="card">
           <h2 className="section">Alerty stanów magazynowych</h2>
           {lowStock.length === 0 ? (
             <p className="muted" style={{ fontSize: 13 }}>Brak alertów</p>

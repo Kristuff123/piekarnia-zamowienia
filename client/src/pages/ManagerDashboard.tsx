@@ -94,6 +94,39 @@ export default function ManagerDashboard() {
       </div>
 
       <div className="card">
+        <h2 className="section">Analiza ABC (wg przychodu)</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead><tr><th>Klasa</th><th>Produkty</th><th className="num">Przychód</th><th className="num">Udział</th></tr></thead>
+            <tbody>
+              {(() => {
+                const sorted = byProduct.map((p) => ({ ...p, rev: p.ilość * (PRODUCTS.find((x) => x.name === p.name)?.price ?? 1) })).sort((a, b) => b.rev - a.rev);
+                const total = sorted.reduce((a, b) => a + b.rev, 0);
+                let cum = 0;
+                const classes: Record<string, { count: number; rev: number }> = { A: { count: 0, rev: 0 }, B: { count: 0, rev: 0 }, C: { count: 0, rev: 0 } };
+                sorted.forEach((p) => {
+                  cum += p.rev;
+                  const pct = (cum / total) * 100;
+                  const cls = pct <= 80 ? "A" : pct <= 95 ? "B" : "C";
+                  classes[cls].count += 1;
+                  classes[cls].rev += p.rev;
+                });
+                return (["A", "B", "C"] as const).map((c) => (
+                  <tr key={c}>
+                    <td style={{ fontWeight: 600 }}>{c}</td>
+                    <td>{classes[c].count}</td>
+                    <td className="num">{classes[c].rev.toFixed(0)} zł</td>
+                    <td className="num">{total ? ((classes[c].rev / total) * 100).toFixed(1) : 0}%</td>
+                  </tr>
+                ));
+              })()}
+            </tbody>
+          </table>
+        </div>
+        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>A = 80% przychodu, B = kolejne 15%, C = reszta.</p>
+      </div>
+
+      <div className="card">
         <h2 className="section">Porównanie okresów (obecny vs poprzedni tydzień)</h2>
         <div style={{ height: 220 }}>
           <ResponsiveContainer width="100%" height="100%">
