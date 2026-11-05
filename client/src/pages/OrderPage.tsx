@@ -168,6 +168,12 @@ export default function OrderPage() {
     PRODUCTS.reduce((a, p) => a + qty[p.id] * p.price, 0) +
     cakeLines.reduce((a, l) => a + l.qty * l.unitPrice, 0);
 
+  const selectedCakePrice = () => {
+    if (!activeCake) return 0;
+    const size = activeCake.sizes.find((s) => s.id === cakeSize);
+    return (size?.price ?? 0) * cakeQty;
+  };
+
   const submit = () => {
     const lines: OrderLine[] = [
       ...PRODUCTS.filter((p) => qty[p.id] > 0).map((p) => ({
@@ -271,26 +277,38 @@ export default function OrderPage() {
 
       {tab === "torty" && (
         <div className="stack">
-          <div className="grid-3">
-            {CAKES.map((c) => (
-              <div key={c.id} className="card" style={{ padding: 0, overflow: "hidden" }}>
-                <img src="https://bagietka.pl/wp-content/uploads/2025/03/4f238c_02b3c95c67894423af92b5e9ac9eec58mv2-2.avif" alt={c.name} style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
-                <div style={{ padding: 16 }}>
-                <div style={{ fontWeight: 600, marginBottom: 4 }}>{c.name}</div>
-                <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>{c.description}</p>
-                <button className="btn btn-primary" onClick={() => openConfigurator(c)} style={{ width: "100%", justifyContent: "center" }}>
-                  <Plus size={14} /> Konfiguruj
-                </button>
-              </div>
-              </div>
-            ))}
+          <div className="grid-4">
+            {CAKES.map((c) => {
+              const fromPrice = Math.min(...c.sizes.map((s) => s.price));
+              return (
+                <div key={c.id} className="card cake-card" onClick={() => openConfigurator(c)} style={{ cursor: "pointer", display: "flex", flexDirection: "column", gap: 0 }}>
+                  <div style={{ position: "relative", aspectRatio: 1, overflow: "hidden" }}>
+                    <img
+                      src={c.image}
+                      alt={c.name}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                    <div style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(255,255,255,0.85)", padding: "4px 8px", borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
+                      od {fromPrice.toFixed(0)} zł
+                    </div>
+                  </div>
+                  <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>{c.name}</div>
+                    <p className="muted" style={{ fontSize: 12, lineHeight: 1.4, margin: 0 }}>{c.description}</p>
+                    <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: 8 }}>
+                      <Plus size={14} /> Konfiguruj
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {cakeLines.length > 0 && (
             <div className="card" style={{ padding: 0, overflow: "hidden" }}>
               <div style={{ overflowX: "auto" }}>
                 <table className="table">
-                  <thead><tr><th>Tort</th><th className="num">Ilość</th><th className="num">Cena</th><th></th></tr></thead>
+                  <thead><tr><th>{t("order.table_cake")}</th><th className="num">{t("order.table_cake_qty")}</th><th className="num">{t("order.table_cake_price")}</th><th></th></tr></thead>
                   <tbody>
                     {cakeLines.map((l, i) => (
                       <tr key={i}>
@@ -301,7 +319,7 @@ export default function OrderPage() {
                           {l.cakeConfig?.allergies?.length ? <div className="muted" style={{ fontSize: 12 }}>{t("order.cake_allergies_label")} {l.cakeConfig.allergies.join(", ")}</div> : null}
                         </td>
                         <td className="num">{l.qty}</td>
-                        <td className="num">{(l.qty * l.unitPrice).toFixed(2)} zł</td>
+                        <td className="num">{l.unitPrice.toLocaleString("pl-PL", { style: "currency", currency: "PLN" })}</td>
                         <td className="num"><button className="btn btn-ghost" onClick={() => setCakeLines((p) => p.filter((_, idx) => idx !== i))} aria-label="Usuń"><Trash2 size={14} /></button></td>
                       </tr>
                     ))}
@@ -314,49 +332,67 @@ export default function OrderPage() {
       )}
 
       {activeCake && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "grid", placeItems: "center", zIndex: 50 }} onClick={() => setActiveCake(null)}>
-          <div className="card" style={{ width: 480, maxHeight: "80vh", overflow: "auto" }} onClick={(e) => e.stopPropagation()}>
-            <h2 className="section">{activeCake.name}</h2>
-            <div className="stack">
-              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="kpi-label">{t("order.cake_size")}</span>
-                <select className="input" value={cakeSize} onChange={(e) => setCakeSize(e.target.value)}>
-                  {activeCake.sizes.map((s) => <option key={s.id} value={s.id}>{s.label} - {s.price.toFixed(2)} zł</option>)}
-                </select>
-              </label>
-              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="kpi-label">{t("order.cake_flavor")}</span>
-                <select className="input" value={cakeFlavor} onChange={(e) => setCakeFlavor(e.target.value)}>
-                  {activeCake.flavors.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-                </select>
-              </label>
-              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="kpi-label">{t("order.cake_qty")}</span>
-                <input className="input" type="number" min={1} value={cakeQty} onChange={(e) => setCakeQty(Number(e.target.value))} />
-              </label>
-              <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="kpi-label">{t("order.cake_inscription")}</span>
-                <input className="input" placeholder={t("order.cake_inscription_placeholder")} value={inscription} onChange={(e) => setInscription(e.target.value)} />
-              </label>
-              <div>
-                <div className="kpi-label" style={{ marginBottom: 6 }}>{t("order.cake_extras")}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {activeCake.extras.map((ex) => (
-                    <button key={ex} className={`btn ${extras.includes(ex) ? "btn-primary" : ""}`} style={{ height: 28, fontSize: 12 }} onClick={() => toggle(extras, ex, setExtras)}>{ex}</button>
-                  ))}
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "grid", placeItems: "center", zIndex: 50 }} onClick={() => setActiveCake(null)}>
+          <div className="card" style={{ width: 640, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", gap: 24, padding: 24, minHeight: 300 }}>
+              <div style={{ position: "relative", aspectRatio: 1, width: 220, flexShrink: 0, overflow: "hidden" }}>
+                <img
+                  src={activeCake.image}
+                  alt={activeCake.name}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                />
+              </div>
+              <div className="stack" style={{ flex: 1, gap: 16 }}>
+                <h2 className="section" style={{ margin: 0 }}>{activeCake.name}</h2>
+                <p className="muted" style={{ margin: 0, fontSize: 13 }}>{activeCake.description}</p>
+                <div className="stack" style={{ gap: 12 }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <span className="kpi-label">{t("order.cake_size")}</span>
+                    <select className="input" value={cakeSize} onChange={(e) => setCakeSize(e.target.value)}>
+                      {activeCake.sizes.map((s) => <option key={s.id} value={s.id}>{s.label} — {s.price.toFixed(2)} zł</option>)}
+                    </select>
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <span className="kpi-label">{t("order.cake_flavor")}</span>
+                    <select className="input" value={cakeFlavor} onChange={(e) => setCakeFlavor(e.target.value)}>
+                      {activeCake.flavors.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                    </select>
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <span className="kpi-label">{t("order.cake_qty")}</span>
+                    <input className="input" type="number" min={1} value={cakeQty} onChange={(e) => setCakeQty(Number(e.target.value))} style={{ width: 100 }} />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <span className="kpi-label">{t("order.cake_inscription")}</span>
+                    <input className="input" placeholder={t("order.cake_inscription_placeholder")} value={inscription} onChange={(e) => setInscription(e.target.value)} />
+                  </label>
+                  <div>
+                    <div className="kpi-label" style={{ marginBottom: 6 }}>{t("order.cake_extras")}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {activeCake.extras.map((ex) => (
+                        <button key={ex} className={`btn ${extras.includes(ex) ? "btn-primary" : ""}`} style={{ height: 32, fontSize: 13 }} onClick={() => toggle(extras, ex, setExtras)}>{ex}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="kpi-label" style={{ marginBottom: 6 }}>{t("order.cake_allergies")}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {ALLERGIES.map((a) => (
+                        <button key={a} className={`btn ${allergies.includes(a) ? "btn-primary" : ""}`} style={{ height: 32, fontSize: 13 }} onClick={() => toggle(allergies, a, setAllergies)}>{a}</button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
+            <div className="cake-footer">
               <div>
-                <div className="kpi-label" style={{ marginBottom: 6 }}>{t("order.cake_allergies")}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {ALLERGIES.map((a) => (
-                    <button key={a} className={`btn ${allergies.includes(a) ? "btn-primary" : ""}`} style={{ height: 28, fontSize: 12 }} onClick={() => toggle(allergies, a, setAllergies)}>{a}</button>
-                  ))}
-                </div>
+                <div className="kpi-label">{t("order.table_cake_price")}</div>
+                <div className="kpi" style={{ fontSize: 20 }}>{selectedCakePrice().toLocaleString("pl-PL", { style: "currency", currency: "PLN" })}</div>
               </div>
-              <div className="row" style={{ justifyContent: "flex-end", gap: 8 }}>
+              <div className="stack" style={{ alignItems: "flex-end", gap: 8 }}>
                 <button className="btn" onClick={() => setActiveCake(null)}>{t("order.btn_cancel")}</button>
-                <button className="btn btn-primary" onClick={addCake}>{t("order.btn_add_cake")}</button>
+                <button className="btn btn-primary" onClick={addCake} style={{ minWidth: 140 }}>{t("order.btn_add_cake")}</button>
               </div>
             </div>
           </div>

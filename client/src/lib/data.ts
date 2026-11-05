@@ -189,6 +189,7 @@ export interface Cake {
   id: string;
   name: string;
   description: string;
+  image: string;
   sizes: CakeSize[];
   flavors: CakeFlavor[];
   extras: string[];
@@ -215,25 +216,25 @@ const FLAVORS_CHOC = [
 const EXTRAS_STD = ["Napis na torcie", "Świeczki", "Owoce sezonowe", "Złote płatki", "Kwiaty jadalne"];
 
 export const CAKES: Cake[] = [
-  { id: "t-szwarcwaldzki", name: "Tort Szwarcwaldzki", description: "Jasne biszkopty przełożone masą czekoladową", sizes: SIZES_ROUND, flavors: FLAVORS_CHOC, extras: EXTRAS_STD },
-  { id: "t-czekoladowy", name: "Tort czekoladowy", description: "Jasne biszkopty przełożone masą czekoladową", sizes: SIZES_ROUND, flavors: FLAVORS_CHOC, extras: EXTRAS_STD },
-  { id: "t-czekoladowy-maliny", name: "Tort krem czekoladowy z malinami", description: "Tort czekoladowy z malinami", sizes: SIZES_ROUND, flavors: FLAVORS_CHOC, extras: EXTRAS_STD },
-  { id: "t-toffi", name: "Tort bita śmietana o smaku toffi", description: "Lekki tort toffi", sizes: SIZES_ROUND, flavors: [{ id: "f-toffi", label: "Toffi" }], extras: EXTRAS_STD },
-  { id: "t-fantazja", name: "Tort Fantazja", description: "Tort wielowarstwowy", sizes: SIZES_ROUND, flavors: [{ id: "f-mix", label: "Mieszany" }], extras: EXTRAS_STD },
-  { id: "t-truskawkowy", name: "Tort truskawkowy", description: "Tort z truskawkami", sizes: SIZES_ROUND, flavors: [{ id: "f-straw", label: "Truskawkowy" }], extras: EXTRAS_STD },
-  { id: "t-royal", name: "Tort Royal", description: "Wykwintny tort Royal", sizes: SIZES_ROUND, flavors: [{ id: "f-royal", label: "Royal" }], extras: EXTRAS_STD },
-  { id: "t-porzeczkowa", name: "Tort Porzeczkowa Nuta", description: "Tort z porzeczką", sizes: SIZES_ROUND, flavors: [{ id: "f-currant", label: "Porzeczkowy" }], extras: EXTRAS_STD },
-  { id: "t-roche", name: "Tort Roche", description: "Tort inspirowany pralinami", sizes: SIZES_ROUND, flavors: [{ id: "f-roche", label: "Orzechowo-czekoladowy" }], extras: EXTRAS_STD },
-  { id: "t-marczello", name: "Tort Marczello", description: "Tort Marczello", sizes: SIZES_ROUND, flavors: [{ id: "f-marczello", label: "Marczelllo" }], extras: EXTRAS_STD },
-  { id: "t-malina-mascarpone", name: "Tort Malina Mascarpone", description: "Tort malinowy z mascarpone", sizes: SIZES_ROUND, flavors: [{ id: "f-malina", label: "Malinowy" }], extras: EXTRAS_STD },
-  { id: "t-mango-mascarpone", name: "Tort Mango Mascarpone", description: "Tort mango z mascarpone", sizes: SIZES_ROUND, flavors: [{ id: "f-mango", label: "Mango" }], extras: EXTRAS_STD },
-  { id: "t-malinowy", name: "Tort malinowy", description: "Tort malinowy", sizes: SIZES_ROUND, flavors: [{ id: "f-malina2", label: "Malinowy" }], extras: EXTRAS_STD },
-  { id: "t-cytrynowy", name: "Tort cytrynowy z mascarpone", description: "Tort cytrynowy", sizes: SIZES_ROUND, flavors: [{ id: "f-lemon", label: "Cytrynowy" }], extras: EXTRAS_STD },
-  { id: "t-smietana-owoce", name: "Tort bita śmietana z owocami", description: "Tort ze świeżą śmietaną i owocami", sizes: SIZES_ROUND, flavors: [{ id: "f-fruit", label: "Owocowy" }], extras: EXTRAS_STD },
-  { id: "t-weselny", name: "Tort weselny", description: "Tort weselny (wariant W)", sizes: SIZES_RECT, flavors: [{ id: "f-wedding", label: "Weselny" }], extras: EXTRAS_STD },
-  { id: "t-specjalny", name: "Tort specjalny", description: "Tort okolicznościowy (wariant S)", sizes: SIZES_ROUND, flavors: [{ id: "f-special", label: "Specjalny" }], extras: EXTRAS_STD },
-  { id: "t-dzieci", name: "Tort dla dzieci", description: "Tort dla dzieci", sizes: SIZES_ROUND, flavors: [{ id: "f-kids", label: "Dla dzieci" }], extras: EXTRAS_STD },
-  { id: "t-slodki-stol", name: "Słodki stół", description: "Zestaw słodkości na stół", sizes: SIZES_RECT, flavors: [{ id: "f-sweet", label: "Mieszany" }], extras: EXTRAS_STD },
+  { id: "t-szwarcwaldzki", name: "Tort Szwarcwaldzki", description: "Jasne biszkopty przełożone masą czekoladową", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_4c7f7fef66854b96aeed63b462408647mv2.avif", sizes: SIZES_ROUND, flavors: FLAVORS_CHOC, extras: EXTRAS_STD },
+  { id: "t-czekoladowy", name: "Tort czekoladowy", description: "Jasne biszkopty przełożone masą czekoladową", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_02b3c95c67894423af92b5e9ac9eec58mv2-2.avif", sizes: SIZES_ROUND, flavors: FLAVORS_CHOC, extras: EXTRAS_STD },
+  { id: "t-czekoladowy-maliny", name: "Tort krem czekoladowy z malinami", description: "Tort czekoladowy z malinami", image: "https://bagietka.pl/wp-content/uploads/2025/03/Tort-czekoladowy-z-malinami-3-1024x681.jpg", sizes: SIZES_ROUND, flavors: FLAVORS_CHOC, extras: EXTRAS_STD },
+  { id: "t-toffi", name: "Tort bita śmietana o smaku toffi", description: "Lekki tort toffi", image: "https://bagietka.pl/wp-content/uploads/2025/03/Tort-toffi-3-1024x681.jpg", sizes: SIZES_ROUND, flavors: [{ id: "f-toffi", label: "Toffi" }], extras: EXTRAS_STD },
+  { id: "t-fantazja", name: "Tort Fantazja", description: "Tort wielowarstwowy", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_bcade168407348858514bfbc3f932aaamv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-mix", label: "Mieszany" }], extras: EXTRAS_STD },
+  { id: "t-truskawkowy", name: "Tort truskawkowy", description: "Tort z truskawkami", image: "https://bagietka.pl/wp-content/uploads/2025/03/Tort-truskawkowy-4-1024x681.jpg", sizes: SIZES_ROUND, flavors: [{ id: "f-straw", label: "Truskawkowy" }], extras: EXTRAS_STD },
+  { id: "t-royal", name: "Tort Royal", description: "Wykwintny tort Royal", image: "https://bagietka.pl/wp-content/uploads/2025/03/Tort-Royal-3-1024x681.jpg", sizes: SIZES_ROUND, flavors: [{ id: "f-royal", label: "Royal" }], extras: EXTRAS_STD },
+  { id: "t-porzeczkowa", name: "Tort Porzeczkowa Nuta", description: "Tort z porzeczką", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_6ea2774f611d4585bac8d74728db6b34mv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-currant", label: "Porzeczkowy" }], extras: EXTRAS_STD },
+  { id: "t-roche", name: "Tort Roche", description: "Tort inspirowany pralinami", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_6292f007cb93421ba82e95b4f83c10a5mv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-roche", label: "Orzechowo-czekoladowy" }], extras: EXTRAS_STD },
+  { id: "t-marczello", name: "Tort Marczello", description: "Tort Marczello", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_9e8ad969f9f4478aadafdba58b80f2f3mv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-marczello", label: "Marczelllo" }], extras: EXTRAS_STD },
+  { id: "t-malina-mascarpone", name: "Tort Malina Mascarpone", description: "Tort malinowy z mascarpone", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_2c92772b1ed14678832ad630840c202bmv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-malina", label: "Malinowy" }], extras: EXTRAS_STD },
+  { id: "t-mango-mascarpone", name: "Tort Mango Mascarpone", description: "Tort mango z mascarpone", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_9e88ef5c5b854ed8b5b1a02d238c9d32mv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-mango", label: "Mango" }], extras: EXTRAS_STD },
+  { id: "t-malinowy", name: "Tort malinowy", description: "Tort malinowy", image: "https://bagietka.pl/wp-content/uploads/2025/03/Tort-malinowy-z-biala-czekolada-2-1024x681.jpg", sizes: SIZES_ROUND, flavors: [{ id: "f-malina2", label: "Malinowy" }], extras: EXTRAS_STD },
+  { id: "t-cytrynowy", name: "Tort cytrynowy z mascarpone", description: "Tort cytrynowy", image: "https://bagietka.pl/wp-content/uploads/2025/03/Tort-cytrynowy-z-mascarpone-1-1024x681.jpg", sizes: SIZES_ROUND, flavors: [{ id: "f-lemon", label: "Cytrynowy" }], extras: EXTRAS_STD },
+  { id: "t-smietana-owoce", name: "Tort bita śmietana z owocami", description: "Tort ze świeżą śmietaną i owocami", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_6529ab41af6d443ebf002d29575dfbbfmv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-fruit", label: "Owocowy" }], extras: EXTRAS_STD },
+  { id: "t-weselny", name: "Tort weselny", description: "Tort weselny (wariant W)", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_f6ddf2b033114cbeafd21d67ed54829bmv2.avif", sizes: SIZES_RECT, flavors: [{ id: "f-wedding", label: "Weselny" }], extras: EXTRAS_STD },
+  { id: "t-specjalny", name: "Tort specjalny", description: "Tort okolicznościowy (wariant S)", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_1c489e53bb534204bf5f216d0412d89dmv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-special", label: "Specjalny" }], extras: EXTRAS_STD },
+  { id: "t-dzieci", name: "Tort dla dzieci", description: "Tort dla dzieci", image: "https://bagietka.pl/wp-content/uploads/2025/03/4f238c_d2f198992d4a4dc8956721938fcf6f9emv2.avif", sizes: SIZES_ROUND, flavors: [{ id: "f-kids", label: "Dla dzieci" }], extras: EXTRAS_STD },
+  { id: "t-slodki-stol", name: "Słodki stół", description: "Zestaw słodkości na stół", image: "https://bagietka.pl/wp-content/uploads/2025/03/DSC3410-1.jpg", sizes: SIZES_RECT, flavors: [{ id: "f-sweet", label: "Mieszany" }], extras: EXTRAS_STD },
 ];
 
 export const ALLERGIES = ["Gluten", "Orzechy", "Laktoza", "Jajka", "Soja"];
