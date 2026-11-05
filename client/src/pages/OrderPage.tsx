@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { PRODUCTS, MIN_QTY, SHOPS, Order, ORDERS, CAKES, ALLERGIES, Cake, CakeConfig, OrderLine, TEMPLATES, reserveStock } from "../lib/data";
+import { apiFetch } from "../lib/api";
 import { Plus, Trash2 } from "lucide-react";
 
 export default function OrderPage() {
@@ -190,6 +191,7 @@ export default function OrderPage() {
     };
     reserveStock(lines);
     ORDERS.unshift(order);
+    apiFetch("/webhooks/emit", { method: "POST", body: JSON.stringify({ event: "document.indexed", payload: { orderId: order.id } }) }).catch(() => {});
     setSubmitted(order);
   };
 

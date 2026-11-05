@@ -147,6 +147,20 @@ router.get("/deliveries", auth, (req, res) => {
   res.json(DELIVERIES);
 });
 
+router.post("/webhooks/emit", auth, (req, res) => {
+  const { event, payload } = req.body || {};
+  if (!event) return res.status(400).json({ error: "Brak zdarzenia" });
+  const body = JSON.stringify({ event, payload, at: new Date().toISOString() });
+  const created = [];
+  WEBHOOKS.filter((w) => w.active && (w.events || []).includes(event)).forEach((wh) => {
+    const sig = signPayload(wh.secret, body);
+    const delivery = { id: "d-" + (DELIVERIES.length + 1), webhook: wh.id, event, status: "sent", statusCode: 200, signature: sig, body, at: new Date().toISOString().slice(0, 16).replace("T", " ") };
+    DELIVERIES.unshift(delivery);
+    created.push(delivery);
+  });
+  res.json({ created });
+});
+
 // --- API keys (maszynowe) ---
 router.get("/api-keys", auth, (req, res) => {
   if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
