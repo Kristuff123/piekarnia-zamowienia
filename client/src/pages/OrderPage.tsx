@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { PRODUCTS, MIN_QTY, SHOPS, Order, ORDERS, CAKES, ALLERGIES, Cake, CakeConfig, OrderLine, TEMPLATES } from "../lib/data";
+import { PRODUCTS, MIN_QTY, SHOPS, Order, ORDERS, CAKES, ALLERGIES, Cake, CakeConfig, OrderLine, TEMPLATES, reserveStock } from "../lib/data";
 import { Plus, Trash2 } from "lucide-react";
 
 export default function OrderPage() {
@@ -188,6 +188,7 @@ export default function OrderPage() {
       recurring: recurring !== "none" ? { every: recurring, nextRun: new Date(Date.now() + (recurring === "weekly" ? 7 : 30) * 86400000).toISOString().slice(0, 10) } : undefined,
       history: [{ status: "wysłane", at: now }],
     };
+    reserveStock(lines);
     ORDERS.unshift(order);
     setSubmitted(order);
   };

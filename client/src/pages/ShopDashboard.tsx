@@ -116,6 +116,29 @@ export default function ShopDashboard() {
         </div>
       </div>
 
+      <div className="card">
+        <h2 className="section">Sugerowane ilości (forecast)</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead><tr><th>Produkt</th><th className="num">Sprzedaż</th><th className="num">Sugerowana ilość</th></tr></thead>
+            <tbody>
+              {shopSales.map((s) => {
+                const p = PRODUCTS.find((x) => x.id === s.product);
+                const suggested = Math.ceil(s.qty * 1.15);
+                return (
+                  <tr key={s.product}>
+                    <td>{p?.name}</td>
+                    <td className="num">{s.qty}</td>
+                    <td className="num" style={{ fontWeight: 600 }}>{suggested}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>Sugestia = sprzedaż + 15% bufor.</p>
+      </div>
+
       <div className="grid-2">
         <div className="card">
           <h2 className="section">Ostatnie zamówienia</h2>

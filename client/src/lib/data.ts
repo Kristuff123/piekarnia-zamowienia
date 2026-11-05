@@ -299,6 +299,14 @@ export const ORDERS: Order[] = [
 
 export const TEMPLATES: OrderTemplate[] = [];
 
+export function reserveStock(lines: OrderLine[]) {
+  lines.forEach((l) => {
+    if (l.kind !== "product") return;
+    const s = STOCK.find((x) => x.product === l.ref);
+    if (s) s.qty = Math.max(0, s.qty - l.qty);
+  });
+}
+
 export const STOCK: StockItem[] = [
   { product: "p1", qty: 120, min: 50, location: "Magazyn główny", expiry: "2026-11-08" },
   { product: "p2", qty: 18, min: 30, location: "Magazyn główny", expiry: "2026-11-10" },
