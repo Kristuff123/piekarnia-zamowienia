@@ -9,9 +9,13 @@ export default function LoginPage() {
   const [p, setP] = useState("");
   const [err, setErr] = useState("");
 
-  const submit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(l, p)) navigate("/");
+    setLoading(true);
+    const ok = await login(l, p);
+    setLoading(false);
+    if (ok) navigate("/");
     else setErr("Nieprawidłowy login lub hasło");
   };
 
@@ -42,8 +46,8 @@ export default function LoginPage() {
             <input className="input" type="password" placeholder="••••••" value={p} onChange={(e) => setP(e.target.value)} aria-label="Hasło" />
           </label>
           {err && <div role="alert" style={{ color: "var(--negative)", fontSize: 13 }}>{err}</div>}
-          <button className="btn btn-primary" type="submit" style={{ width: "100%", justifyContent: "center", minHeight: 44 }}>
-            Zaloguj się
+          <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: "100%", justifyContent: "center", minHeight: 44 }}>
+            {loading ? "Logowanie…" : "Zaloguj się"}
           </button>
         </div>
         <div className="muted" style={{ marginTop: 16, fontSize: 12 }}>

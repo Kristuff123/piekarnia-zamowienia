@@ -16,7 +16,7 @@ export interface User {
 
 interface AuthContextValue {
   user: User | null;
-  login: (login: string, password: string) => boolean;
+  login: (login: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -36,7 +36,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return raw ? JSON.parse(raw) : null;
   });
 
-  const login = (l: string, p: string) => {
+  const login = async (l: string, p: string) => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ login: l, password: p }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const safe = data.user ?? data;
+        if (data.token) localStorage.setItem("auth_token", data.token);
+        setUser(safe);
+        localStorage.setItem("auth_user", JSON.stringify(safe));
+        return true;
+      }
+    } catch {}
+    // fallback mock
     const found = USERS.find((u) => u.login === l && u.password === p);
     if (!found) return false;
     const { password, ...safe } = found;
