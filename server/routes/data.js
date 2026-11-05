@@ -1,6 +1,9 @@
 const express = require("express");
+const { z } = require("zod");
 const { auth } = require("../middleware/auth");
 const router = express.Router();
+
+const shopIdSchema = z.string().regex(/^s[0-9]+$/);
 
 const SHOPS = [
   { id: "s1", name: "Sklep Centrum", city: "Warszawa", region: "Mazowieckie" },
@@ -26,8 +29,14 @@ router.get("/shops", auth, (req, res) => {
   res.json(allowed);
 });
 router.get("/products", auth, (_req, res) => res.json(PRODUCTS));
-router.get("/min-qty/:shopId", auth, (req, res) => res.json(MIN_QTY[req.params.shopId] || {}));
+router.get("/min-qty/:shopId", auth, (req, res) => {
+  const parsed = shopIdSchema.safeParse(req.params.shopId);
+  if (!parsed.success) return res.status(400).json({ error: "Nieprawidłowy shopId" });
+  res.json(MIN_QTY[req.params.shopId] || {});
+});
 router.get("/dashboard/:shopId", auth, (req, res) => {
+  const parsed = shopIdSchema.safeParse(req.params.shopId);
+  if (!parsed.success) return res.status(400).json({ error: "Nieprawidłowy shopId" });
   res.json({ shop: req.params.shopId, revenue: 1234, qty: 567 });
 });
 
