@@ -11,10 +11,21 @@ export default function Shell() {
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
+  const [pushEnabled, setPushEnabled] = useState(() => localStorage.getItem("push") === "1");
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
+
+  const enablePush = async () => {
+    if (!("Notification" in window)) { alert("Brak wsparcia"); return; }
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") {
+      setPushEnabled(true);
+      localStorage.setItem("push", "1");
+      new Notification("Powiadomienia włączone", { body: `Alertów: ${alerts.length}` });
+    }
+  };
   if (!user) return null;
 
   const alerts = STOCK.filter((s) => s.qty < s.min).map((s) => {
@@ -101,6 +112,9 @@ export default function Shell() {
           <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => setLang(lang === "pl" ? "en" : "pl")}>
             {lang === "pl" ? "EN" : "PL"}
           </button>
+          {!pushEnabled && (
+            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={enablePush}>Włącz push</button>
+          )}
           <div className="muted" style={{ fontSize: 13 }}>
             {user.name} · {user.role}
           </div>
