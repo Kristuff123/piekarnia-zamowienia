@@ -331,14 +331,16 @@ export default function AdminDashboard() {
         <h2 className="section">Dziennik doręczeń webhooków</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
-            <thead><tr><th>Data</th><th>Zdarzenie</th><th>Status</th><th>Kod</th></tr></thead>
+            <thead><tr><th>Data</th><th>Zdarzenie</th><th>Status</th><th>Próby</th><th>Błąd</th><th>Kod</th></tr></thead>
             <tbody>
               {deliveries.map((d) => (
                 <tr key={d.id}>
                   <td style={{ fontSize: 12 }}>{d.at}</td>
                   <td style={{ fontSize: 12 }}>{d.event}</td>
-                  <td><span className={`pill ${d.status === "sent" ? "pill-positive" : "pill-negative"}`}>{d.status}</span></td>
-                  <td className="num">{d.statusCode}</td>
+                  <td><span className={`pill ${d.status === "sent" ? "pill-positive" : d.status === "failed" ? "pill-negative" : "pill-warning"}`}>{d.status}</span></td>
+                  <td className="num">{d.attempts ?? 0}</td>
+                  <td style={{ fontSize: 11, color: "var(--negative)" }}>{d.lastError ?? "—"}</td>
+                  <td className="num">{d.statusCode ?? "—"}</td>
                 </tr>
               ))}
               {deliveries.length === 0 && <tr><td colSpan={4} className="muted">Brak doręczeń</td></tr>}

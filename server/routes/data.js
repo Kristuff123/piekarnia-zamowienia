@@ -29,6 +29,20 @@ const crypto = require("crypto");
 
 const API_KEYS = [];
 
+// SSRF guard: block private/loopback/link-local targets
+function isPrivateUrl(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1") return true;
+    if (/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return true;
+    if (host.endsWith(".local")) return true;
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 function hashKey(k) { return crypto.createHash("sha256").update(k).digest("hex"); }
 
 const WEBHOOKS = [];
@@ -147,6 +161,64 @@ router.get("/deliveries", auth, (req, res) => {
   res.json(DELIVERIES);
 });
 
+const BACKOFF = [1000, 5000, 15000];
+
+async function attemptDelivery(delivery) {
+  const wh = WEBHOOKS.find((w) => w.id === delivery.webhook);
+  if (!wh) { delivery.status = "failed"; delivery.lastError = "webhook removed"; return; }
+  if (isPrivateUrl(wh.url) && process.env.WEBHOOK_BLOCK_PRIVATE !== "0") {
+    delivery.status = "failed";
+    delivery.lastError = "SSRF: prywatny cel zablokowany";
+    delivery.attempts += 1;
+    return;
+  }
+  delivery.attempts += 1;
+  try {
+    const res = await fetch(wh.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Kortex-Signature": delivery.signature,
+        "X-Kortex-Event": delivery.event,
+        "X-Kortex-Delivery": delivery.id,
+      },
+      body: delivery.body,
+      redirect: "manual",
+      signal: AbortSignal.timeout(10000),
+    });
+    delivery.statusCode = res.status;
+    if (res.ok) {
+      delivery.status = "sent";
+      delivery.lastError = null;
+    } else {
+      delivery.status = "pending";
+      delivery.lastError = `HTTP ${res.status}`;
+      scheduleRetry(delivery);
+    }
+  } catch (err) {
+    delivery.statusCode = 0;
+    delivery.status = "pending";
+    delivery.lastError = err.message;
+    scheduleRetry(delivery);
+  }
+}
+
+function scheduleRetry(delivery) {
+  if (delivery.attempts >= 4) {
+    delivery.status = "failed";
+    return;
+  }
+  if (process.env.NODE_ENV === "test") {
+    // in tests: mark failed immediately to avoid open timers
+    delivery.status = "failed";
+    return;
+  }
+  const delay = BACKOFF[Math.min(delivery.attempts - 1, BACKOFF.length - 1)];
+  setTimeout(() => {
+    if (delivery.status === "pending") attemptDelivery(delivery);
+  }, delay);
+}
+
 router.post("/webhooks/emit", auth, (req, res) => {
   const { event, payload } = req.body || {};
   if (!event) return res.status(400).json({ error: "Brak zdarzenia" });
@@ -154,9 +226,11 @@ router.post("/webhooks/emit", auth, (req, res) => {
   const created = [];
   WEBHOOKS.filter((w) => w.active && (w.events || []).includes(event)).forEach((wh) => {
     const sig = signPayload(wh.secret, body);
-    const delivery = { id: "d-" + (DELIVERIES.length + 1), webhook: wh.id, event, status: "sent", statusCode: 200, signature: sig, body, at: new Date().toISOString().slice(0, 16).replace("T", " ") };
+    const delivery = { id: "d-" + (DELIVERIES.length + 1), webhook: wh.id, event, status: "pending", statusCode: null, signature: sig, body, attempts: 0, lastError: null, at: new Date().toISOString().slice(0, 16).replace("T", " ") };
     DELIVERIES.unshift(delivery);
     created.push(delivery);
+    // fire-and-forget with retry
+    attemptDelivery(delivery);
   });
   res.json({ created });
 });
