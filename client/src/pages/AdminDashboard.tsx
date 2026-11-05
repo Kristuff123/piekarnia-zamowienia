@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [keyName, setKeyName] = useState("");
   const [backupSchedule, setBackupSchedule] = useState<any>(null);
+  const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [keyScopes, setKeyScopes] = useState("read");
   const [whUrl, setWhUrl] = useState("");
   const [whEvents, setWhEvents] = useState("document.indexed");
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
     apiFetch<any[]>("/webhooks").then((d) => { if (d) setWebhooks(d); });
     apiFetch<any[]>("/api-keys").then((d) => { if (d) setApiKeys(d); });
     apiFetch<any>("/backup-schedule").then((d) => { if (d) setBackupSchedule(d); });
+    apiFetch<any[]>("/price-history").then((d) => { if (d) setPriceHistory(d); });
   }, []);
   const createWebhook = async () => {
     const res = await apiFetch<any>("/webhooks", { method: "POST", body: JSON.stringify({ url: whUrl, events: whEvents.split(",").map((e) => e.trim()) }) });
@@ -259,6 +261,25 @@ export default function AdminDashboard() {
           </p>
         )}
         <button className="btn btn-primary" onClick={runBackup}>Utwórz kopię teraz</button>
+      </div>
+
+      <div className="card">
+        <h2 className="section">Historia cen</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead><tr><th>Produkt</th><th className="num">Cena</th><th>Data</th></tr></thead>
+            <tbody>
+              {priceHistory.map((p, i) => (
+                <tr key={i}>
+                  <td>{PRODUCTS.find((x) => x.id === p.product)?.name ?? p.product}</td>
+                  <td className="num">{p.price.toFixed(2)} zł</td>
+                  <td style={{ fontSize: 12 }}>{p.at}</td>
+                </tr>
+              ))}
+              {priceHistory.length === 0 && <tr><td colSpan={3} className="muted">Brak historii</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="card">

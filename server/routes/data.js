@@ -5,6 +5,13 @@ const router = express.Router();
 
 const shopIdSchema = z.string().regex(/^s[0-9]+$/);
 
+const PRICE_HISTORY = [
+  { product: "p1", price: 4.2, at: "2026-10-01" },
+  { product: "p1", price: 4.5, at: "2026-10-15" },
+  { product: "p6", price: 3.2, at: "2026-10-01" },
+  { product: "p6", price: 3.5, at: "2026-10-20" },
+];
+
 const STOCK = [
   { product: "p1", qty: 120, min: 50, location: "Magazyn główny", expiry: "2026-11-08" },
   { product: "p2", qty: 18, min: 30, location: "Magazyn główny", expiry: "2026-11-10" },
@@ -178,5 +185,8 @@ router.post("/backup-schedule/run", auth, (req, res) => {
   AUDIT_LOG.unshift(entry);
   res.json({ snapshot, entry });
 });
+
+router.get("/price-history", auth, (req, res) => res.json(PRICE_HISTORY));
+router.get("/price-history/:productId", auth, (req, res) => res.json(PRICE_HISTORY.filter((p) => p.product === req.params.productId)));
 
 module.exports = router;
