@@ -8,13 +8,30 @@ export default function AdminDashboard() {
   const [mins, setMins] = useState(MIN_QTY);
   const [stock, setStock] = useState<StockItem[]>(STOCK);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>(MOCK_AUDIT);
+  const [webhooks, setWebhooks] = useState<any[]>([]);
+  const [whUrl, setWhUrl] = useState("");
+  const [whEvents, setWhEvents] = useState("document.indexed");
   const [adjProduct, setAdjProduct] = useState(PRODUCTS[0]?.id ?? "");
   const [adjDelta, setAdjDelta] = useState(0);
   const [adjReason, setAdjReason] = useState("");
   useEffect(() => {
     apiFetch<AuditEntry[]>("/audit").then((d) => { if (d) setAuditLog(d); });
     apiFetch<StockItem[]>("/stock").then((d) => { if (d) setStock(d); });
+    apiFetch<any[]>("/webhooks").then((d) => { if (d) setWebhooks(d); });
   }, []);
+  const createWebhook = async () => {
+    const res = await apiFetch<any>("/webhooks", { method: "POST", body: JSON.stringify({ url: whUrl, events: whEvents.split(",").map((e) => e.trim()) }) });
+    if (res) { setWebhooks((prev) => [...prev, res]); setWhUrl(""); }
+  };
+  const testWebhook = async (id: string) => {
+    const res = await apiFetch<any>(`/webhooks/${id}/test`, { method: "POST" });
+    if (res) alert(`Wysłano test. Sygnatura: ${res.signature}`);
+  };
+  const deleteWebhook = async (id: string) => {
+    await apiFetch(`/webhooks/${id}`, { method: "DELETE" });
+    setWebhooks((prev) => prev.filter((w) => w.id !== id));
+  };
+
   const adjustStock = async () => {
     const res = await apiFetch<{ item: StockItem; entry: AuditEntry }>("/stock/adjust", {
       method: "POST",
@@ -159,6 +176,34 @@ export default function AdminDashboard() {
           <input className="input" type="number" placeholder="Delta (+/-)" value={adjDelta} onChange={(e) => setAdjDelta(Number(e.target.value))} style={{ width: 120 }} />
           <input className="input" placeholder="Powód korekty" value={adjReason} onChange={(e) => setAdjReason(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
           <button className="btn btn-primary" onClick={adjustStock}>Zastosuj</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="section">Webhooki (z podpisem HMAC)</h2>
+        <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          <input className="input" placeholder="https://example.com/hook" value={whUrl} onChange={(e) => setWhUrl(e.target.value)} style={{ flex: 1, minWidth: 240 }} />
+          <input className="input" placeholder="zdarzenia (przecinek)" value={whEvents} onChange={(e) => setWhEvents(e.target.value)} style={{ width: 220 }} />
+          <button className="btn btn-primary" onClick={createWebhook}>Dodaj</button>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead><tr><th>URL</th><th>Zdarzenia</th><th>Aktywny</th><th></th></tr></thead>
+            <tbody>
+              {webhooks.map((w) => (
+                <tr key={w.id}>
+                  <td style={{ fontSize: 12 }} className="mono">{w.url}</td>
+                  <td style={{ fontSize: 12 }}>{(w.events || []).join(", ")}</td>
+                  <td>{w.active ? <span className="pill pill-positive">tak</span> : <span className="pill pill-neutral">nie</span>}</td>
+                  <td style={{ display: "flex", gap: 4 }}>
+                    <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => testWebhook(w.id)}>Test</button>
+                    <button className="btn" style={{ height: 24, fontSize: 11 }} onClick={() => deleteWebhook(w.id)}>Usuń</button>
+                  </td>
+                </tr>
+              ))}
+              {webhooks.length === 0 && <tr><td colSpan={4} className="muted">Brak webhooków</td></tr>}
+            </tbody>
+          </table>
         </div>
       </div>
 

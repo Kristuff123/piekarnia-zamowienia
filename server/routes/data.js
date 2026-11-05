@@ -13,6 +13,15 @@ const STOCK = [
   { product: "p4", qty: 6, min: 10, location: "Magazyn główny", expiry: "2026-11-12" },
 ];
 
+const crypto = require("crypto");
+
+const WEBHOOKS = [];
+const DELIVERIES = [];
+
+function signPayload(secret, body) {
+  return "sha256=" + crypto.createHmac("sha256", secret).update(body).digest("hex");
+}
+
 const AUDIT_LOG = [
   { id: "a1", at: "2026-10-29 08:12", user: "anna.sklep1", action: "Złożono zamówienie", target: "z-1001" },
   { id: "a2", at: "2026-10-29 09:00", user: "maria.manager", action: "Zmiana statusu", target: "z-1001 → w realizacji" },
@@ -75,6 +84,46 @@ router.post("/audit", auth, (req, res) => {
   const entry = { id: "a" + (AUDIT_LOG.length + 1), at: new Date().toISOString().slice(0, 16).replace("T", " "), user: req.user.login, action, target };
   AUDIT_LOG.unshift(entry);
   res.status(201).json(entry);
+});
+
+// --- Webhooks ---
+router.get("/webhooks", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  res.json(WEBHOOKS.map((w) => ({ ...w, secret: undefined })));
+});
+
+router.post("/webhooks", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  const { url, events } = req.body || {};
+  if (!url || !Array.isArray(events)) return res.status(400).json({ error: "Brak danych" });
+  const secret = crypto.randomBytes(24).toString("hex");
+  const wh = { id: "wh-" + (WEBHOOKS.length + 1), url, events, secret, active: true, createdAt: new Date().toISOString().slice(0, 16).replace("T", " ") };
+  WEBHOOKS.push(wh);
+  res.status(201).json({ ...wh, secret }); // secret shown once
+});
+
+router.delete("/webhooks/:id", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  const idx = WEBHOOKS.findIndex((w) => w.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: "not found" });
+  WEBHOOKS.splice(idx, 1);
+  res.json({ ok: true });
+});
+
+router.post("/webhooks/:id/test", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  const wh = WEBHOOKS.find((w) => w.id === req.params.id);
+  if (!wh) return res.status(404).json({ error: "not found" });
+  const body = JSON.stringify({ event: "test.ping", at: new Date().toISOString() });
+  const sig = signPayload(wh.secret, body);
+  const delivery = { id: "d-" + (DELIVERIES.length + 1), webhook: wh.id, event: "test.ping", status: "sent", statusCode: 200, signature: sig, at: new Date().toISOString().slice(0, 16).replace("T", " ") };
+  DELIVERIES.unshift(delivery);
+  res.json({ delivery, signature: sig });
+});
+
+router.get("/webhooks/:id/deliveries", auth, (req, res) => {
+  if (req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+  res.json(DELIVERIES.filter((d) => d.webhook === req.params.id));
 });
 
 module.exports = router;
