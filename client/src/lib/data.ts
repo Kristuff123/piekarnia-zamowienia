@@ -272,6 +272,7 @@ export interface Order {
   status: "wysłane" | "w realizacji" | "zrealizowane" | "anulowane";
   note?: string;
   recurring?: { every: "weekly" | "monthly"; nextRun: string };
+  tracking?: { courier: string; number: string; eta: string };
   history: OrderStatusEvent[];
 }
 

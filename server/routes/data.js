@@ -5,6 +5,11 @@ const router = express.Router();
 
 const shopIdSchema = z.string().regex(/^s[0-9]+$/);
 
+const ORDERS = [
+  { id: "z-1001", shop: "s1", user: "u1", status: "zrealizowane", tracking: { courier: "DHL", number: "1234567890", eta: "2026-10-29" } },
+  { id: "z-1002", shop: "s2", user: "u2", status: "w realizacji", tracking: { courier: "InPost", number: "9876543210", eta: "2026-10-30" } },
+];
+
 const PRICE_HISTORY = [
   { product: "p1", price: 4.2, at: "2026-10-01" },
   { product: "p1", price: 4.5, at: "2026-10-15" },
@@ -193,5 +198,16 @@ router.post("/backup-schedule/run", auth, (req, res) => {
 
 router.get("/price-history", auth, (req, res) => res.json(PRICE_HISTORY));
 router.get("/price-history/:productId", auth, (req, res) => res.json(PRICE_HISTORY.filter((p) => p.product === req.params.productId)));
+
+router.patch("/orders/:id/tracking", auth, (req, res) => {
+  if (req.user.role !== "admin" && req.user.role !== "manager") return res.status(403).json({ error: "forbidden" });
+  const o = ORDERS.find((x) => x.id === req.params.id);
+  if (!o) return res.status(404).json({ error: "not found" });
+  const { courier, number, eta } = req.body || {};
+  o.tracking = { courier, number, eta };
+  const entry = { id: "a" + (AUDIT_LOG.length + 1), at: new Date().toISOString().slice(0, 16).replace("T", " "), user: req.user.login, action: "Ustawiono śledzenie", target: `${o.id}: ${courier} ${number}` };
+  AUDIT_LOG.unshift(entry);
+  res.json({ order: o, entry });
+});
 
 module.exports = router;

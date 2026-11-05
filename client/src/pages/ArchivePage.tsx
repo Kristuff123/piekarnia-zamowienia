@@ -72,6 +72,7 @@ export default function ArchivePage() {
                     <td>
                       <span className={`pill ${o.status === "zrealizowane" ? "pill-positive" : o.status === "w realizacji" ? "pill-warning" : o.status === "anulowane" ? "pill-negative" : "pill-neutral"}`}>{o.status}</span>
                       {o.recurring && <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>Cykliczne: {o.recurring.every === "weekly" ? "co tydzień" : "co miesiąc"}, następne: {o.recurring.nextRun}</div>}
+                      {o.tracking && <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>Dostawa: {o.tracking.courier} · {o.tracking.number} · ETA {o.tracking.eta}</div>}
                       <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
                         {o.history.map((h) => `${h.status} (${h.at})`).join(" → ")}
                       </div>

@@ -14,6 +14,10 @@ export default function AdminDashboard() {
   const [backupSchedule, setBackupSchedule] = useState<any>(null);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [trackOrder, setTrackOrder] = useState("");
+  const [trackCourier, setTrackCourier] = useState("DHL");
+  const [trackNumber, setTrackNumber] = useState("");
+  const [trackEta, setTrackEta] = useState("");
   const [keyScopes, setKeyScopes] = useState("read");
   const [whUrl, setWhUrl] = useState("");
   const [whEvents, setWhEvents] = useState("document.indexed");
@@ -52,6 +56,10 @@ export default function AdminDashboard() {
   const runBackup = async () => {
     const res = await apiFetch<any>("/backup-schedule/run", { method: "POST" });
     if (res) { setBackupSchedule((s: any) => ({ ...s, lastRun: res.snapshot.at })); alert(`Kopia utworzona: ${res.snapshot.at}`); }
+  };
+  const setTracking = async () => {
+    const res = await apiFetch<any>(`/orders/${trackOrder}/tracking`, { method: "PATCH", body: JSON.stringify({ courier: trackCourier, number: trackNumber, eta: trackEta }) });
+    if (res) alert("Śledzenie ustawione");
   };
 
   const adjustStock = async () => {
@@ -301,6 +309,17 @@ export default function AdminDashboard() {
               {deliveries.length === 0 && <tr><td colSpan={4} className="muted">Brak doręczeń</td></tr>}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="section">Śledzenie dostaw</h2>
+        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+          <input className="input" placeholder="Nr zamówienia (z-1001)" value={trackOrder} onChange={(e) => setTrackOrder(e.target.value)} style={{ width: 160 }} />
+          <input className="input" placeholder="Kurier" value={trackCourier} onChange={(e) => setTrackCourier(e.target.value)} style={{ width: 120 }} />
+          <input className="input" placeholder="Numer przesyłki" value={trackNumber} onChange={(e) => setTrackNumber(e.target.value)} style={{ width: 160 }} />
+          <input className="input" type="date" value={trackEta} onChange={(e) => setTrackEta(e.target.value)} style={{ width: 160 }} />
+          <button className="btn btn-primary" onClick={setTracking}>Ustaw</button>
         </div>
       </div>
 
