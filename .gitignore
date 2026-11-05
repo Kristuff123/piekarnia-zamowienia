@@ -8,3 +8,4 @@ uploads/
 storage/
 *.log
 .taste-skill/
+test-results/

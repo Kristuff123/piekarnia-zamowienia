@@ -39,26 +39,25 @@ export default function Shell() {
     <div className="app-shell">
       <aside className="sidebar">
         <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12, letterSpacing: "-0.02em" }}>
-          Piekarnia
-          <div className="muted" style={{ fontSize: 12, fontWeight: 400 }}>Zamówienia</div>
+          {t("app.title")}
         </div>
         <NavLink to="/" className={({ isActive }) => "nav-item" + (isActive ? " active" : "")}>
-          <LayoutDashboard size={16} /> Pulpit
+          <LayoutDashboard size={16} /> {t("nav.dashboard")}
         </NavLink>
         <NavLink to="/zamowienie" className={({ isActive }) => "nav-item" + (isActive ? " active" : "")}>
-          <ShoppingCart size={16} /> Nowe zamówienie
+          <ShoppingCart size={16} /> {t("nav.order")}
         </NavLink>
         <NavLink to="/archiwum" className={({ isActive }) => "nav-item" + (isActive ? " active" : "")}>
-          <Archive size={16} /> Archiwum
+          <Archive size={16} /> {t("nav.archive")}
         </NavLink>
         {user.role !== "user" && (
           <NavLink to="/manager" className={({ isActive }) => "nav-item" + (isActive ? " active" : "")}>
-            <BarChart3 size={16} /> Manager
+            <BarChart3 size={16} /> {t("nav.manager")}
           </NavLink>
         )}
         {user.role === "admin" && (
           <NavLink to="/admin" className={({ isActive }) => "nav-item" + (isActive ? " active" : "")}>
-            <Settings size={16} /> Administracja
+            <Settings size={16} /> {t("nav.admin")}
           </NavLink>
         )}
         <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--rule)" }}>
@@ -73,7 +72,7 @@ export default function Shell() {
             onClick={() => { logout(); navigate("/login"); }}
             style={{ marginTop: 8 }}
           >
-            <LogOut size={16} /> Wyloguj
+            <LogOut size={16} /> {t("logout")}
           </button>
         </div>
       </aside>
@@ -113,7 +112,7 @@ export default function Shell() {
             {lang === "pl" ? "EN" : "PL"}
           </button>
           {!pushEnabled && (
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={enablePush}>Włącz push</button>
+            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={enablePush}>{t("push")}</button>
           )}
           <div className="muted" style={{ fontSize: 13 }}>
             {user.name} · {user.role}

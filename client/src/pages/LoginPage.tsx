@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import { useT } from "../lib/i18n";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { t } = useT();
   const navigate = useNavigate();
   const [l, setL] = useState("");
   const [p, setP] = useState("");
@@ -16,7 +18,7 @@ export default function LoginPage() {
     const ok = await login(l, p);
     setLoading(false);
     if (ok) navigate("/");
-    else setErr("Nieprawidłowy login lub hasło");
+    else setErr(t("app.errors.invalid_creds"));
   };
 
   return (
@@ -34,7 +36,7 @@ export default function LoginPage() {
       </div>
       <div style={{ display: "grid", placeItems: "center", padding: 32 }}>
       <form onSubmit={submit} className="card" style={{ width: 360 }}>
-        <h1 className="title" style={{ marginBottom: 4 }}>Piekarnia</h1>
+        <h1 className="title" style={{ marginBottom: 4 }}>{t("app.title")}</h1>
         <p className="muted" style={{ marginBottom: 20 }}>Zamówienia w magazynie głównym</p>
         <div className="stack">
           <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -47,7 +49,7 @@ export default function LoginPage() {
           </label>
           {err && <div role="alert" style={{ color: "var(--negative)", fontSize: 13 }}>{err}</div>}
           <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: "100%", justifyContent: "center", minHeight: 44 }}>
-            {loading ? "Logowanie…" : "Zaloguj się"}
+            {loading ? t("app.login.loading") : t("login")}
           </button>
         </div>
         <div className="muted" style={{ marginTop: 16, fontSize: 12 }}>
