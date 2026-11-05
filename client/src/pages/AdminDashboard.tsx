@@ -324,6 +324,30 @@ export default function AdminDashboard() {
       </div>
 
       <div className="card">
+        <h2 className="section">Rozliczenia (szacunek)</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead><tr><th>Sklep</th><th className="num">Przychód</th><th className="num">Koszt (60%)</th><th className="num">Marża</th></tr></thead>
+            <tbody>
+              {SHOPS.map((s) => {
+                const rev = SALES.filter((x) => x.shop === s.id).reduce((a, b) => a + b.revenue, 0);
+                const cost = rev * 0.6;
+                return (
+                  <tr key={s.id}>
+                    <td>{s.name}</td>
+                    <td className="num">{rev.toFixed(0)} zł</td>
+                    <td className="num">{cost.toFixed(0)} zł</td>
+                    <td className="num" style={{ fontWeight: 600 }}>{(rev - cost).toFixed(0)} zł</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>Szacunek na podstawie sprzedaży. Koszt = 60% przychodu.</p>
+      </div>
+
+      <div className="card">
         <h2 className="section">Ilości minimalne (per sklep × produkt)</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="table">
