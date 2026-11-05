@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { PRODUCTS, MIN_QTY, SHOPS, Order, ORDERS, CAKES, ALLERGIES, Cake, CakeConfig, OrderLine, TEMPLATES } from "../lib/data";
@@ -23,6 +23,8 @@ export default function OrderPage() {
   const [note, setNote] = useState("");
   const [recurring, setRecurring] = useState<"none" | "weekly" | "monthly">("none");
   const [submitted, setSubmitted] = useState<Order | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [templateName, setTemplateName] = useState("");
 
   const repeatLast = () => {
@@ -70,6 +72,41 @@ export default function OrderPage() {
   const [extras, setExtras] = useState<string[]>([]);
   const [allergies, setAllergies] = useState<string[]>([]);
   const [cakeQty, setCakeQty] = useState(1);
+
+  // barcode scanner
+  useEffect(() => {
+    if (!scanning) return;
+    let stream: MediaStream | null = null;
+    let raf = 0;
+    const start = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        if (videoRef.current) videoRef.current.srcObject = stream;
+        const BD = (window as any).BarcodeDetector;
+        if (!BD) { alert("BarcodeDetector nie jest wspierany w tej przeglądarce"); setScanning(false); return; }
+        const detector = new BD({ formats: ["ean_13", "code_128", "qr_code"] });
+        const tick = async () => {
+          if (!videoRef.current) return;
+          try {
+            const codes = await detector.detect(videoRef.current);
+            if (codes.length) {
+              const val = codes[0].rawValue;
+              const prod = PRODUCTS.find((p) => p.sku === val);
+              if (prod) setQty((q) => ({ ...q, [prod.id]: (q[prod.id] ?? 0) + 1 }));
+              setScanning(false);
+            }
+          } catch {}
+          raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+      } catch (e) {
+        alert("Brak dostępu do kamery");
+        setScanning(false);
+      }
+    };
+    start();
+    return () => { if (stream) stream.getTracks().forEach((t) => t.stop()); cancelAnimationFrame(raf); };
+  }, [scanning]);
 
   // prefill from archived order
   useEffect(() => {
@@ -177,6 +214,7 @@ export default function OrderPage() {
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button className={`btn ${tab === "produkty" ? "btn-primary" : ""}`} onClick={() => setTab("produkty")}>Asortyment stały</button>
         <button className={`btn ${tab === "torty" ? "btn-primary" : ""}`} onClick={() => setTab("torty")}>Torty (konfigurator)</button>
+        <button className="btn" onClick={() => setScanning(true)}>Skanuj kod</button>
         <button className="btn" onClick={repeatLast}>Powtórz ostatnie</button>
         <select className="input" style={{ width: 200 }} onChange={(e) => loadTemplate(e.target.value)} defaultValue="">
           <option value="">Wczytaj szablon…</option>
@@ -185,6 +223,13 @@ export default function OrderPage() {
         <input className="input" style={{ width: 160 }} placeholder="Nazwa szablonu" value={templateName} onChange={(e) => setTemplateName(e.target.value)} />
         <button className="btn" onClick={saveTemplate}>Zapisz jako szablon</button>
       </div>
+
+      {scanning && (
+        <div className="card" style={{ padding: 0, overflow: "hidden", position: "relative" }}>
+          <video ref={videoRef} autoPlay playsInline style={{ width: "100%", maxHeight: 300, objectFit: "cover", display: "block" }} />
+          <button className="btn" style={{ position: "absolute", top: 8, right: 8 }} onClick={() => setScanning(false)}>Zamknij</button>
+        </div>
+      )}
 
       {tab === "produkty" && (
         <>

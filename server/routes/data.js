@@ -5,6 +5,14 @@ const router = express.Router();
 
 const shopIdSchema = z.string().regex(/^s[0-9]+$/);
 
+const STOCK = [
+  { product: "p1", qty: 120, min: 50, location: "Magazyn główny", expiry: "2026-11-08" },
+  { product: "p2", qty: 18, min: 30, location: "Magazyn główny", expiry: "2026-11-10" },
+  { product: "p3", qty: 240, min: 100, location: "Magazyn główny", expiry: "2026-11-07" },
+  { product: "p6", qty: 45, min: 60, location: "Magazyn główny", expiry: "2026-11-06" },
+  { product: "p4", qty: 6, min: 10, location: "Magazyn główny", expiry: "2026-11-12" },
+];
+
 const AUDIT_LOG = [
   { id: "a1", at: "2026-10-29 08:12", user: "anna.sklep1", action: "Złożono zamówienie", target: "z-1001" },
   { id: "a2", at: "2026-10-29 09:00", user: "maria.manager", action: "Zmiana statusu", target: "z-1001 → w realizacji" },
@@ -45,6 +53,19 @@ router.get("/dashboard/:shopId", auth, (req, res) => {
   const parsed = shopIdSchema.safeParse(req.params.shopId);
   if (!parsed.success) return res.status(400).json({ error: "Nieprawidłowy shopId" });
   res.json({ shop: req.params.shopId, revenue: 1234, qty: 567 });
+});
+
+router.get("/stock", auth, (req, res) => res.json(STOCK));
+
+router.post("/stock/adjust", auth, (req, res) => {
+  const { product, delta, reason } = req.body || {};
+  if (!product || typeof delta !== "number" || !reason) return res.status(400).json({ error: "Brak danych" });
+  const item = STOCK.find((s) => s.product === product);
+  if (!item) return res.status(404).json({ error: "Nie znaleziono" });
+  item.qty += delta;
+  const entry = { id: "a" + (AUDIT_LOG.length + 1), at: new Date().toISOString().slice(0, 16).replace("T", " "), user: req.user.login, action: "Korekta stanu", target: `${product}: ${delta >= 0 ? "+" : ""}${delta} (${reason})` };
+  AUDIT_LOG.unshift(entry);
+  res.json({ item, entry });
 });
 
 router.get("/audit", auth, (req, res) => res.json(AUDIT_LOG));

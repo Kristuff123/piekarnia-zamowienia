@@ -2,17 +2,34 @@ import { useState, useEffect } from "react";
 import { SHOPS, PRODUCTS, MIN_QTY, SALES, STOCK, AUDIT_LOG as MOCK_AUDIT } from "../lib/data";
 import { USERS } from "../lib/auth";
 import { apiFetch } from "../lib/api";
-import type { AuditEntry } from "../lib/data";
+import type { AuditEntry, StockItem } from "../lib/data";
 
 export default function AdminDashboard() {
   const [mins, setMins] = useState(MIN_QTY);
+  const [stock, setStock] = useState<StockItem[]>(STOCK);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>(MOCK_AUDIT);
+  const [adjProduct, setAdjProduct] = useState(PRODUCTS[0]?.id ?? "");
+  const [adjDelta, setAdjDelta] = useState(0);
+  const [adjReason, setAdjReason] = useState("");
   useEffect(() => {
     apiFetch<AuditEntry[]>("/audit").then((d) => { if (d) setAuditLog(d); });
+    apiFetch<StockItem[]>("/stock").then((d) => { if (d) setStock(d); });
   }, []);
+  const adjustStock = async () => {
+    const res = await apiFetch<{ item: StockItem; entry: AuditEntry }>("/stock/adjust", {
+      method: "POST",
+      body: JSON.stringify({ product: adjProduct, delta: adjDelta, reason: adjReason }),
+    });
+    if (res) {
+      setStock((prev) => prev.map((s) => (s.product === res.item.product ? res.item : s)));
+      setAuditLog((prev) => [res.entry, ...prev]);
+      setAdjDelta(0);
+      setAdjReason("");
+    }
+  };
   const totalRev = SALES.reduce((a, b) => a + b.revenue, 0);
   const totalQty = SALES.reduce((a, b) => a + b.qty, 0);
-  const lowStock = STOCK.filter((s) => s.qty < s.min);
+  const lowStock = stock.filter((s) => s.qty < s.min);
 
   return (
     <div className="stack">
@@ -130,6 +147,18 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="section">Korekta stanu magazynowego (inwentaryzacja)</h2>
+        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+          <select className="input" style={{ width: 260 }} value={adjProduct} onChange={(e) => setAdjProduct(e.target.value)}>
+            {PRODUCTS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <input className="input" type="number" placeholder="Delta (+/-)" value={adjDelta} onChange={(e) => setAdjDelta(Number(e.target.value))} style={{ width: 120 }} />
+          <input className="input" placeholder="Powód korekty" value={adjReason} onChange={(e) => setAdjReason(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+          <button className="btn btn-primary" onClick={adjustStock}>Zastosuj</button>
         </div>
       </div>
 
