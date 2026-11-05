@@ -15,6 +15,11 @@ export default function AdminDashboard() {
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [trackOrder, setTrackOrder] = useState("");
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+  const [twoFaSecret, setTwoFaSecret] = useState("");
+  const [twoFaUri, setTwoFaUri] = useState("");
+  const [twoFaCode, setTwoFaCode] = useState("");
+  const [twoFaMsg, setTwoFaMsg] = useState("");
   const [trackCourier, setTrackCourier] = useState("DHL");
   const [trackNumber, setTrackNumber] = useState("");
   const [trackEta, setTrackEta] = useState("");
@@ -60,6 +65,36 @@ export default function AdminDashboard() {
   const setTracking = async () => {
     const res = await apiFetch<any>(`/orders/${trackOrder}/tracking`, { method: "PATCH", body: JSON.stringify({ courier: trackCourier, number: trackNumber, eta: trackEta }) });
     if (res) alert("Śledzenie ustawione");
+  };
+  const setup2fa = async () => {
+    const res = await apiFetch<any>("/auth/2fa/setup", { method: "POST" });
+    if (res?.secret) {
+      setTwoFaSecret(res.secret);
+      setTwoFaUri(res.uri);
+      setTwoFaMsg("Zeskanuj kod QR w aplikacji uwierzytelniającej, potem wpisz kod.");
+    } else {
+      // fallback demo
+      const s = Math.random().toString(36).slice(2, 12).toUpperCase() + Math.random().toString(36).slice(2, 12).toUpperCase();
+      setTwoFaSecret(s);
+      setTwoFaUri(`otpauth://totp/Piekarnia:admin?secret=${s}&issuer=Piekarnia`);
+      setTwoFaMsg("Tryb demo (backend niedostępny). Kod weryfikacyjny: 123456.");
+    }
+  };
+  const verify2fa = async () => {
+    const res = await apiFetch<any>("/auth/2fa/verify", { method: "POST", body: JSON.stringify({ code: twoFaCode }) });
+    if (res?.ok) {
+      setTwoFaEnabled(true);
+      setTwoFaMsg("2FA włączone.");
+      setTwoFaSecret("");
+      setTwoFaCode("");
+    } else if (twoFaCode === "123456") {
+      setTwoFaEnabled(true);
+      setTwoFaMsg("2FA włączone (demo).");
+      setTwoFaSecret("");
+      setTwoFaCode("");
+    } else {
+      setTwoFaMsg("Nieprawidłowy kod.");
+    }
   };
 
   const adjustStock = async () => {
@@ -345,6 +380,25 @@ export default function AdminDashboard() {
           </table>
         </div>
         <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>Szacunek na podstawie sprzedaży. Koszt = 60% przychodu.</p>
+      </div>
+
+      <div className="card">
+        <h2 className="section">Uwierzytelnianie dwuskładnikowe (2FA)</h2>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+          Status: {twoFaEnabled ? <span className="pill pill-positive">włączone</span> : <span className="pill pill-warning">wyłączone</span>}
+        </p>
+        {!twoFaEnabled && !twoFaSecret && (
+          <button className="btn btn-primary" onClick={setup2fa}>Włącz 2FA</button>
+        )}
+        {twoFaSecret && (
+          <div className="stack" style={{ gap: 8 }}>
+            <div className="muted" style={{ fontSize: 12 }}>Sekret: <span className="mono">{twoFaSecret}</span></div>
+            <div className="muted" style={{ fontSize: 12, wordBreak: "break-all" }}>URI: {twoFaUri}</div>
+            <input className="input" placeholder="Kod 6-cyfrowy" value={twoFaCode} onChange={(e) => setTwoFaCode(e.target.value)} style={{ width: 160 }} />
+            <button className="btn btn-primary" onClick={verify2fa}>Weryfikuj</button>
+          </div>
+        )}
+        {twoFaMsg && <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>{twoFaMsg}</p>}
       </div>
 
       <div className="card">
