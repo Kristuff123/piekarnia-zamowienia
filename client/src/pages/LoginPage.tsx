@@ -15,10 +15,10 @@ export default function LoginPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const ok = await login(l, p);
+    const result = await login(l, p);
     setLoading(false);
-    if (ok) navigate("/");
-    else setErr(t("app.errors.invalid_creds"));
+    if (result === "ok") navigate("/");
+    else setErr(t(result === "unavailable" ? "app.errors.unavailable" : "app.errors.invalid_creds"));
   };
 
   return (

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { apiFetch } from "./api";
 
 export type Role = "user" | "manager" | "admin";
 
@@ -14,9 +15,12 @@ export interface User {
   twoFactor: boolean;
 }
 
+// "ok" | "invalid" (API odrzuciło dane) | "unavailable" (brak API / błąd serwera)
+export type LoginResult = "ok" | "invalid" | "unavailable";
+
 interface AuthContextValue {
   user: User | null;
-  login: (login: string, password: string) => Promise<boolean>;
+  login: (login: string, password: string) => Promise<LoginResult>;
   logout: () => void;
 }
 
@@ -36,35 +40,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return raw ? JSON.parse(raw) : null;
   });
 
-  const login = async (l: string, p: string) => {
+  const login = async (l: string, p: string): Promise<LoginResult> => {
+    let res: Response;
     try {
-      const res = await fetch("/api/auth/login", {
+      res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ login: l, password: p }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        const safe = data.user ?? data;
-        if (data.token) localStorage.setItem("auth_token", data.token);
-        setUser(safe);
-        localStorage.setItem("auth_user", JSON.stringify(safe));
-        return true;
-      }
-    } catch {}
-    // fallback mock
-    const found = USERS.find((u) => u.login === l && u.password === p);
-    if (!found) return false;
-    const { password, ...safe } = found;
-    setUser(safe);
-    localStorage.setItem("auth_user", JSON.stringify(safe));
-    return true;
+    } catch {
+      // API unreachable (backend down / offline) – fall back to demo users
+      const found = USERS.find((u) => u.login === l && u.password === p);
+      if (!found) return "unavailable";
+      const { password, ...safe } = found;
+      setUser(safe);
+      localStorage.setItem("auth_user", JSON.stringify(safe));
+      return "ok";
+    }
+    // API answered: trust it – a rejected login must never succeed from mock data
+    if (!res.ok) return res.status >= 500 ? "unavailable" : "invalid";
+    try {
+      const data = await res.json();
+      const safe = data.user ?? data;
+      if (data.token) localStorage.setItem("auth_token", data.token);
+      else localStorage.removeItem("auth_token");
+      setUser(safe);
+      localStorage.setItem("auth_user", JSON.stringify(safe));
+      return "ok";
+    } catch {
+      return "unavailable";
+    }
   };
 
   const logout = () => {
-    setUser(null);
+    // drop the server session (httpOnly cookie) before forgetting the local token
+    void apiFetch("/auth/logout", { method: "POST" });
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("auth_user");
+    setUser(null);
   };
 
   return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
