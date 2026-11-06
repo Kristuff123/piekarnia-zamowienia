@@ -17,6 +17,7 @@ npm install
 npm run dev   # http://localhost:5173
 npm run typecheck
 npm run build
+npx playwright install chromium   # jednorazowo, dla testów E2E
 ```
 
 ### API
@@ -25,14 +26,14 @@ cd server
 cp .env.example .env
 npm install
 npm run dev   # http://localhost:5000
-npm test      # Jest, 34 testy (in-memory)
+npm test      # Jest, 35 testów (in-memory)
 npm start     # produkcyjne
 ```
 
 ## Role i widoki
 
 - **user** — pulpit sklepu, nowe zamówienie (z ilościami minimalnymi), historia
-- **manager** — zbiorczy widok przypisanych sklepów, najlepiej sprzedające się pozycje, analiza ABC, śledzenie dostaw
+- **manager** — zbiorczy widok przypisanych sklepów, najlepiej sprzedające się pozycje, analiza ABC, śledzenie dostaw, korekta stanu magazynu (uprawnienie `approve`)
 - **admin** — wszystkie sklepy, konfiguracja ilości minimalnych, audit log, 2FA, webhooki, klucze API, kopie zapasowe, historia cen
 
 ## Zmienne środowiskowe (server/.env)
@@ -47,14 +48,16 @@ npm start     # produkcyjne
 | WEBHOOK_BLOCK_PRIVATE | 1 | `1` blokuje wysyłkę webhooków na adresy prywatne (SSRF guard); `0` wyłącza |
 | MSSQL_* | — | MS SQL (ERP); pusty `MSSQL_SERVER` = tryb mock |
 
-## Nowe endpointy (wymagają auth, oprócz login)
+## Endpointy API (wymagają auth, oprócz logowania)
 
 - `POST /api/auth/login` — logowanie (zod), opcjonalnie ustawia cookie `kortex_session`
+- `GET /api/auth/me` — dane zalogowanego użytkownika z tokenu
 - `POST /api/auth/logout` — wyczyszczenie cookie
 - `POST /api/auth/2fa/setup` — wygenerowanie sekretu TOTP + URI (QR)
 - `POST /api/auth/2fa/verify` — weryfikacja kodu 6-cyfrowego
-- `GET /api/shops`, `GET /api/products`, `GET /api/min-qty/:shopId`
-- `GET /api/dashboard/:shopId`, `GET /api/stock`, `POST /api/stock/adjust`
+- `GET /api/shops`, `GET /api/products`
+- `GET /api/min-qty/:shopId`, `GET /api/dashboard/:shopId` — tylko sklepy z `req.user.shops` (admin: wszystkie), inaczej `403`
+- `GET /api/stock`, `POST /api/stock/adjust` — korekta tylko dla `admin` lub uprawnienia `approve`, inaczej `403`
 - `GET /api/audit`, `POST /api/audit`
 - `GET /api/webhooks`, `POST /api/webhooks`, `DELETE /api/webhooks/:id`
 - `POST /api/webhooks/:id/test`, `GET /api/webhooks/:id/deliveries`, `GET /api/deliveries`
@@ -75,5 +78,5 @@ Login: `anna.sklep1` / `demo`, `maria.manager` / `demo`, `admin` / `demo`, `jan.
 
 ## Testy
 
-- Serwer: `cd server && npm test` (Jest, 34 testy, in-memory)
-- E2E: `cd client && npx playwright test` (wymaga uruchomionego serwera i klienta)
+- Serwer: `cd server && npm test` (Jest, 35 testów w 4 zestawach: `api`, `login`, `webhook`, `authz`; in-memory)
+- E2E: `cd client && npx playwright test` (wymaga uruchomionego serwera i klienta; przeglądarkę instaluje się raz przez `npx playwright install chromium`)
