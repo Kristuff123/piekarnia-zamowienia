@@ -41,7 +41,7 @@ Design direction "Framed sheet" (light): tokens in `client/src/styles.css` (`--g
 
 - `server/server.js`: helmet, strict CORS (`CLIENT_ORIGIN`), rate-limit on `/api/auth/login`, body limit 1MB, `Cache-Control: no-store`, 404/500 handlers.
 - `routes/auth.js`: zod validation on login body.
-- `routes/data.js`: zod validation on `:shopId` params; `min-qty/:shopId` and `dashboard/:shopId` scoped to `req.user.shops` (admin sees all) and `stock/adjust` is admin-only — both answer `403 forbidden` otherwise.
+- `routes/data.js`: zod validation on `:shopId` params; `min-qty/:shopId` and `dashboard/:shopId` scoped to `req.user.shops` (admin sees all), `stock/adjust` requires admin or the `approve` permission; otherwise `403 forbidden`.
 - Secrets only in `server/.env` (never commit). Root `.env.example` + `server/.env.example`.
 - `.gitignore` excludes `.env`, `dist/`, `node_modules/`, `test-results/`, `.taste-skill/`.
 

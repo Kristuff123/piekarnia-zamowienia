@@ -8,8 +8,11 @@ const shopIdSchema = z.string().regex(/^s[0-9]+$/);
 // admin widzi wszystkie sklepy, pozostali tylko przypisane w tokenie
 const canAccessShop = (user, shopId) => user.role === "admin" || (user.shops || []).includes(shopId);
 
-const requireAdmin = (req, res, next) =>
-  req.user.role === "admin" ? next() : res.status(403).json({ error: "forbidden" });
+// magazyn centralny: admin lub rola z uprawnieniem "approve" (manager)
+const requireStockAdjust = (req, res, next) =>
+  req.user.role === "admin" || (req.user.permissions || []).includes("approve")
+    ? next()
+    : res.status(403).json({ error: "forbidden" });
 
 const ORDERS = [
   { id: "z-1001", shop: "s1", user: "u1", status: "zrealizowane", tracking: { courier: "DHL", number: "1234567890", eta: "2026-10-29" } },
@@ -104,7 +107,7 @@ router.get("/dashboard/:shopId", auth, (req, res) => {
 
 router.get("/stock", auth, (req, res) => res.json(STOCK));
 
-router.post("/stock/adjust", auth, requireAdmin, (req, res) => {
+router.post("/stock/adjust", auth, requireStockAdjust, (req, res) => {
   const { product, delta, reason } = req.body || {};
   if (!product || typeof delta !== "number" || !reason) return res.status(400).json({ error: "Brak danych" });
   const item = STOCK.find((s) => s.product === product);

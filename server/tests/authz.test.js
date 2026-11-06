@@ -90,7 +90,7 @@ describe("zakres sklepów: /api/dashboard/:shopId", () => {
   });
 });
 
-describe("korekta stanu: /api/stock/adjust tylko dla admina", () => {
+describe("korekta stanu: /api/stock/adjust dla admina i managerów z approve", () => {
   let anna, jan, maria, admin;
 
   beforeAll(async () => {
@@ -111,9 +111,17 @@ describe("korekta stanu: /api/stock/adjust tylko dla admina", () => {
     expect(after.body).toEqual(before.body);
   });
 
-  it("odrzuca użytkownika sklepu i managera", async () => {
+  it("odrzuca użytkownika sklepu bez uprawnienia approve", async () => {
     expect((await adjust(anna)).status).toBe(403);
-    expect((await adjust(maria)).status).toBe(403);
+  });
+
+  it("pozwala managerowi z uprawnieniem approve", async () => {
+    const before = await get("/api/stock", maria);
+    const beforeQty = before.body.find((s) => s.product === "p6").qty;
+    const res = await adjust(maria, "p6", -1);
+    expect(res.status).toBe(200);
+    expect(res.body.item).toMatchObject({ product: "p6", qty: beforeQty - 1 });
+    expect(res.body.entry).toMatchObject({ user: "maria.manager", action: "Korekta stanu" });
   });
 
   it("nadal wymaga tokenu", async () => {
