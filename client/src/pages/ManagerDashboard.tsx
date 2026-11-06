@@ -1,12 +1,52 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { useT } from "../lib/i18n";
-import { SHOPS, PRODUCTS, SALES, ORDERS } from "../lib/data";
+import { SHOPS, PRODUCTS, SALES, ORDERS, STOCK } from "../lib/data";
+import type { StockItem } from "../lib/data";
+import { apiFetch } from "../lib/api";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts";
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
   const { t } = useT();
   const shops = SHOPS.filter((s) => user?.shops.includes(s.id));
+
+  // Korekta magazynu: admin lub rola z uprawnieniem "approve" (zgodnie z API).
+  const canAdjustStock = !!user && (user.role === "admin" || user.permissions.includes("approve"));
+  const [stock, setStock] = useState<StockItem[]>(STOCK);
+  const [adjProduct, setAdjProduct] = useState(PRODUCTS[0]?.id ?? "");
+  const [adjDelta, setAdjDelta] = useState("");
+  const [adjReason, setAdjReason] = useState("");
+  const [adjSaving, setAdjSaving] = useState(false);
+  const [adjState, setAdjState] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!canAdjustStock) return;
+    apiFetch<StockItem[]>("/stock").then((d) => { if (d) setStock(d); });
+  }, [canAdjustStock]);
+
+  const adjustStock = async () => {
+    const delta = Number(adjDelta);
+    if (!adjProduct || !Number.isFinite(delta) || delta === 0 || !adjReason.trim()) {
+      setAdjState({ kind: "error", text: t("manager.stock_validate") });
+      return;
+    }
+    setAdjSaving(true);
+    const res = await apiFetch<{ item: StockItem }>("/stock/adjust", {
+      method: "POST",
+      body: JSON.stringify({ product: adjProduct, delta, reason: adjReason.trim() }),
+    });
+    setAdjSaving(false);
+    if (!res?.item) {
+      setAdjState({ kind: "error", text: t("manager.stock_error") });
+      return;
+    }
+    setStock((prev) => prev.map((s) => (s.product === res.item.product ? res.item : s)));
+    const name = PRODUCTS.find((p) => p.id === adjProduct)?.name ?? adjProduct;
+    setAdjState({ kind: "ok", text: t("manager.stock_saved", { product: name, delta: delta > 0 ? `+${delta}` : String(delta) }) });
+    setAdjDelta("");
+    setAdjReason("");
+  };
 
   const byShop = shops.map((s) => {
     const sales = SALES.filter((x) => x.shop === s.id);
@@ -61,6 +101,82 @@ export default function ManagerDashboard() {
           <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("manager.kpi_by_revenue")}</div>
         </div>
       </div>
+
+      {canAdjustStock && (
+        <div className="card">
+          <h2 className="section">{t("manager.section_stock")}</h2>
+          <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+            <select
+              className="input"
+              style={{ width: 240 }}
+              value={adjProduct}
+              onChange={(e) => setAdjProduct(e.target.value)}
+              aria-label={t("manager.stock_product")}
+            >
+              {PRODUCTS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <input
+              className="input"
+              type="number"
+              step="1"
+              placeholder={t("manager.stock_delta")}
+              value={adjDelta}
+              onChange={(e) => setAdjDelta(e.target.value)}
+              style={{ width: 130 }}
+              aria-label={t("manager.stock_delta")}
+            />
+            <input
+              className="input"
+              placeholder={t("manager.stock_reason")}
+              value={adjReason}
+              onChange={(e) => setAdjReason(e.target.value)}
+              style={{ flex: 1, minWidth: 200 }}
+              aria-label={t("manager.stock_reason")}
+            />
+            <button className="btn btn-primary" onClick={adjustStock} disabled={adjSaving}>
+              {adjSaving ? t("manager.stock_saving") : t("manager.stock_apply")}
+            </button>
+          </div>
+          {adjState && (
+            <p
+              role="status"
+              style={{ fontSize: 12, marginTop: 0, marginBottom: 8, color: adjState.kind === "ok" ? "var(--accent)" : "var(--negative)" }}
+            >
+              {adjState.text}
+            </p>
+          )}
+          <div style={{ overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>{t("manager.stock_product")}</th>
+                  <th className="num">{t("manager.stock_qty")}</th>
+                  <th className="num">{t("manager.stock_min")}</th>
+                  <th>{t("manager.stock_location")}</th>
+                  <th>{t("manager.stock_expiry")}</th>
+                  <th>{t("manager.stock_status")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stock.map((s) => {
+                  const low = s.qty < s.min;
+                  return (
+                    <tr key={s.product}>
+                      <td style={{ fontWeight: 500 }}>{PRODUCTS.find((p) => p.id === s.product)?.name ?? s.product}</td>
+                      <td className="num">{s.qty}</td>
+                      <td className="num">{s.min}</td>
+                      <td>{s.location}</td>
+                      <td>{s.expiry ?? "—"}</td>
+                      <td style={{ color: low ? "var(--negative)" : "var(--muted)" }}>{low ? t("manager.stock_low") : t("manager.stock_ok")}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>{t("manager.stock_hint")}</p>
+        </div>
+      )}
 
       <div className="grid-2">
         <div className="card">
