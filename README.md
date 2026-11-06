@@ -25,7 +25,7 @@ cd server
 cp .env.example .env
 npm install
 npm run dev   # http://localhost:5000
-npm test      # Jest, 12 testów (in-memory)
+npm test      # Jest, 34 testy (in-memory)
 npm start     # produkcyjne
 ```
 
@@ -75,5 +75,5 @@ Login: `anna.sklep1` / `demo`, `maria.manager` / `demo`, `admin` / `demo`, `jan.
 
 ## Testy
 
-- Serwer: `cd server && npm test` (Jest, 12 testów, in-memory)
+- Serwer: `cd server && npm test` (Jest, 34 testy, in-memory)
 - E2E: `cd client && npx playwright test` (wymaga uruchomionego serwera i klienta)

@@ -11,7 +11,7 @@ B2B ordering portal for remote bakery/pastry shops ordering from the central war
 - Client typecheck: `cd client && npm run typecheck` (`tsc --noEmit`)
 - Client build: `cd client && npm run build` (runs `tsc --noEmit && vite build`; typecheck is part of build)
 - API start (prod): `cd server && npm start` (`node server.js`)
-- API tests: `cd server && npm test` (Jest, 12 tests, in-memory; `server.js` only listens when run directly, so `supertest` can import it without starting the server)
+- API tests: `cd server && npm test` (Jest, 34 tests, in-memory; `server.js` only listens when run directly, so `supertest` can import it without starting the server)
 - E2E tests: `cd client && npx playwright test` (requires both dev servers running on :5173 and :5000)
 
 No lint script. No CI workflows.
@@ -41,7 +41,7 @@ Design direction "Framed sheet" (light): tokens in `client/src/styles.css` (`--g
 
 - `server/server.js`: helmet, strict CORS (`CLIENT_ORIGIN`), rate-limit on `/api/auth/login`, body limit 1MB, `Cache-Control: no-store`, 404/500 handlers.
 - `routes/auth.js`: zod validation on login body.
-- `routes/data.js`: zod validation on `:shopId` params.
+- `routes/data.js`: zod validation on `:shopId` params; `min-qty/:shopId` and `dashboard/:shopId` scoped to `req.user.shops` (admin sees all) and `stock/adjust` is admin-only — both answer `403 forbidden` otherwise.
 - Secrets only in `server/.env` (never commit). Root `.env.example` + `server/.env.example`.
 - `.gitignore` excludes `.env`, `dist/`, `node_modules/`, `test-results/`, `.taste-skill/`.
 

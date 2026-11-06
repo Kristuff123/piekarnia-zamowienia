@@ -5,6 +5,12 @@ const router = express.Router();
 
 const shopIdSchema = z.string().regex(/^s[0-9]+$/);
 
+// admin widzi wszystkie sklepy, pozostali tylko przypisane w tokenie
+const canAccessShop = (user, shopId) => user.role === "admin" || (user.shops || []).includes(shopId);
+
+const requireAdmin = (req, res, next) =>
+  req.user.role === "admin" ? next() : res.status(403).json({ error: "forbidden" });
+
 const ORDERS = [
   { id: "z-1001", shop: "s1", user: "u1", status: "zrealizowane", tracking: { courier: "DHL", number: "1234567890", eta: "2026-10-29" } },
   { id: "z-1002", shop: "s2", user: "u2", status: "w realizacji", tracking: { courier: "InPost", number: "9876543210", eta: "2026-10-30" } },
@@ -86,17 +92,19 @@ router.get("/products", auth, (_req, res) => res.json(PRODUCTS));
 router.get("/min-qty/:shopId", auth, (req, res) => {
   const parsed = shopIdSchema.safeParse(req.params.shopId);
   if (!parsed.success) return res.status(400).json({ error: "Nieprawidłowy shopId" });
+  if (!canAccessShop(req.user, req.params.shopId)) return res.status(403).json({ error: "forbidden" });
   res.json(MIN_QTY[req.params.shopId] || {});
 });
 router.get("/dashboard/:shopId", auth, (req, res) => {
   const parsed = shopIdSchema.safeParse(req.params.shopId);
   if (!parsed.success) return res.status(400).json({ error: "Nieprawidłowy shopId" });
+  if (!canAccessShop(req.user, req.params.shopId)) return res.status(403).json({ error: "forbidden" });
   res.json({ shop: req.params.shopId, revenue: 1234, qty: 567 });
 });
 
 router.get("/stock", auth, (req, res) => res.json(STOCK));
 
-router.post("/stock/adjust", auth, (req, res) => {
+router.post("/stock/adjust", auth, requireAdmin, (req, res) => {
   const { product, delta, reason } = req.body || {};
   if (!product || typeof delta !== "number" || !reason) return res.status(400).json({ error: "Brak danych" });
   const item = STOCK.find((s) => s.product === product);
