@@ -98,11 +98,11 @@ export default function OrderPage() {
               if (prod) setQty((q) => ({ ...q, [prod.id]: (q[prod.id] ?? 0) + 1 }));
               setScanning(false);
             }
-          } catch {}
+          } catch { /* ignore detection errors */ }
           raf = requestAnimationFrame(tick);
         };
         raf = requestAnimationFrame(tick);
-      } catch (e) {
+      } catch {
         alert("Brak dostępu do kamery");
         setScanning(false);
       }

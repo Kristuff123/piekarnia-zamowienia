@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // API unreachable (backend down / offline) – fall back to demo users
       const found = USERS.find((u) => u.login === l && u.password === p);
       if (!found) return "unavailable";
-      const { password, ...safe } = found;
+      const { password: _password, ...safe } = found;
       setUser(safe);
       localStorage.setItem("auth_user", JSON.stringify(safe));
       return "ok";

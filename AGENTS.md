@@ -11,10 +11,10 @@ B2B ordering portal for remote bakery/pastry shops ordering from the central war
 - Client typecheck: `cd client && npm run typecheck` (`tsc --noEmit`)
 - Client build: `cd client && npm run build` (runs `tsc --noEmit && vite build`; typecheck is part of build)
 - API start (prod): `cd server && npm start` (`node server.js`)
-- API tests: `cd server && npm test` (Jest, 35 tests in 4 suites — `api`, `login`, `webhook`, `authz` — in-memory; `server.js` only listens when run directly, so `supertest` can import it without starting the server)
+- API tests: `cd server && npm test` (Jest, 48 tests in 5 suites — `api`, `login`, `webhook`, `authz`, `orders` — in-memory; `server.js` only listens when run directly, so `supertest` can import it without starting the server)
 - E2E tests: `cd client && npx playwright test` (requires both dev servers running on :5173 and :5000; first run needs `npx playwright install chromium`)
 
-No lint script. No CI workflows.
+Lint: `cd client && npm run lint`, `cd server && npm run lint`. CI: `.github/workflows/ci.yml` (typecheck, build, server tests, E2E smoke).
 
 ## Architecture
 

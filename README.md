@@ -26,7 +26,7 @@ cd server
 cp .env.example .env
 npm install
 npm run dev   # http://localhost:5000
-npm test      # Jest, 35 testów (in-memory)
+npm test      # Jest, 48 testów (in-memory)
 npm start     # produkcyjne
 ```
 
@@ -78,5 +78,5 @@ Login: `anna.sklep1` / `demo`, `maria.manager` / `demo`, `admin` / `demo`, `jan.
 
 ## Testy
 
-- Serwer: `cd server && npm test` (Jest, 35 testów w 4 zestawach: `api`, `login`, `webhook`, `authz`; in-memory)
+- Serwer: `cd server && npm test` (Jest, 48 testów w 5 zestawach: `api`, `login`, `webhook`, `authz`, `orders`; in-memory)
 - E2E: `cd client && npx playwright test` (wymaga uruchomionego serwera i klienta; przeglądarkę instaluje się raz przez `npx playwright install chromium`)

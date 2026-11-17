@@ -309,4 +309,92 @@ router.patch("/orders/:id/tracking", auth, (req, res) => {
   res.json({ order: o, entry });
 });
 
+// --- Zamówienia ---
+const orderLineSchema = z.object({
+  kind: z.enum(["product", "cake"]),
+  ref: z.string().min(1),
+  label: z.string().min(1),
+  qty: z.number().int().positive(),
+  unitPrice: z.number().nonnegative(),
+  cakeConfig: z.any().optional(),
+});
+
+const createOrderSchema = z.object({
+  shop: z.string().regex(/^s[0-9]+$/),
+  lines: z.array(orderLineSchema).min(1),
+  note: z.string().max(500).optional(),
+  recurring: z.object({ every: z.enum(["weekly", "monthly"]), nextRun: z.string() }).optional(),
+});
+
+router.get("/orders", auth, (req, res) => {
+  const allowedShops = req.user.role === "admin" ? null : (req.user.shops || []);
+  const list = allowedShops ? ORDERS.filter((o) => allowedShops.includes(o.shop)) : ORDERS;
+  res.json(list);
+});
+
+router.get("/orders/:id", auth, (req, res) => {
+  const o = ORDERS.find((x) => x.id === req.params.id);
+  if (!o) return res.status(404).json({ error: "not found" });
+  if (req.user.role !== "admin" && !(req.user.shops || []).includes(o.shop)) return res.status(403).json({ error: "forbidden" });
+  res.json(o);
+});
+
+router.post("/orders", auth, (req, res) => {
+  const parsed = createOrderSchema.safeParse(req.body || {});
+  if (!parsed.success) return res.status(400).json({ error: "Nieprawidłowe dane zamówienia", details: parsed.error.flatten() });
+  const { shop, lines, note, recurring } = parsed.data;
+  if (!canAccessShop(req.user, shop)) return res.status(403).json({ error: "forbidden" });
+  if (!(req.user.permissions || []).includes("order") && req.user.role !== "admin") return res.status(403).json({ error: "forbidden" });
+
+  // rezerwacja stanu dla produktów
+  lines.forEach((l) => {
+    if (l.kind !== "product") return;
+    const s = STOCK.find((x) => x.product === l.ref);
+    if (s) s.qty = Math.max(0, s.qty - l.qty);
+  });
+
+  const now = new Date().toISOString().slice(0, 16).replace("T", " ");
+  const order = {
+    id: "z-" + (1000 + ORDERS.length + 1),
+    shop,
+    user: req.user.id || req.user.login,
+    lines,
+    createdAt: now,
+    status: "wysłane",
+    note: note || undefined,
+    recurring: recurring || undefined,
+    history: [{ status: "wysłane", at: now }],
+  };
+  ORDERS.unshift(order);
+  const entry = { id: "a" + (AUDIT_LOG.length + 1), at: now, user: req.user.login, action: "Złożono zamówienie", target: order.id };
+  AUDIT_LOG.unshift(entry);
+  res.status(201).json({ order, entry });
+});
+
+router.patch("/orders/:id/status", auth, (req, res) => {
+  const o = ORDERS.find((x) => x.id === req.params.id);
+  if (!o) return res.status(404).json({ error: "not found" });
+  if (req.user.role !== "admin" && !(req.user.shops || []).includes(o.shop)) return res.status(403).json({ error: "forbidden" });
+
+  const { status } = req.body || {};
+  const allowed = ["wysłane", "w realizacji", "zrealizowane", "anulowane"];
+  if (!allowed.includes(status)) return res.status(400).json({ error: "Nieprawidłowy status" });
+
+  // użytkownik może anulować tylko własne wysłane zamówienie
+  if (req.user.role === "user") {
+    if (!(req.user.id === o.user || req.user.login === o.user)) return res.status(403).json({ error: "forbidden" });
+    if (status !== "anulowane" || o.status !== "wysłane") return res.status(403).json({ error: "forbidden" });
+  } else if (req.user.role !== "admin" && req.user.role !== "manager") {
+    return res.status(403).json({ error: "forbidden" });
+  }
+
+  o.status = status;
+  const now = new Date().toISOString().slice(0, 16).replace("T", " ");
+  o.history = o.history || [];
+  o.history.push({ status, at: now });
+  const entry = { id: "a" + (AUDIT_LOG.length + 1), at: now, user: req.user.login, action: "Zmiana statusu", target: `${o.id} → ${status}` };
+  AUDIT_LOG.unshift(entry);
+  res.json({ order: o, entry });
+});
+
 module.exports = router;
